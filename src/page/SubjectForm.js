@@ -8,9 +8,9 @@ const InitialValues = {
   subjectName: "",
   coif: null,
   credit: null,
-  EXAM: "",
-  TP: "",
-  TD: "",
+  EXAM: false,
+  TP: false,
+  TD: false,
   Semaster: "",
 };
 
@@ -73,21 +73,21 @@ const SubjectForm = () => {
       EXAM :{" "}
       <Checkbox
         name="EXAM"
-        value='EXAM'
+        value={true}
         size="small"
         onChange={handleChange}
       />
       TD{" "}
       <Checkbox
         name="TD"
-        value='TD'
+        value={true}
         size="small"
         onChange={handleChange}
       />
       TP{" "}
       <Checkbox
         name="TP"
-        value='TP'
+        value={true}
         size="small"
         onChange={handleChange}
       />
