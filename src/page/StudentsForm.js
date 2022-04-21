@@ -8,17 +8,16 @@ const StudentsForm = () => {
   const handleSubmite = (e) => {
     e.preventDefault();
     axios
-    .post(
-      "http://localhost:4000/student",
-      {
-       values: value,
-       datas:data
-
-      },
-      { headers: { "Content-Type": "application/json" } }
+      .post(
+        "http://localhost:4000/student",
+        {
+          values: value,
+          datas: data,
+        },
+        { headers: { "Content-Type": "application/json" } }
       )
       .then((res) => {
-      console.log(res)
+        console.log(res);
       })
       .catch((error) => {
         console.log(error.data);
@@ -39,9 +38,9 @@ const StudentsForm = () => {
     RegistrationNumber: null,
     Points: {
       subjectName: "",
-      Exam: null,
-      TD: null,
-      TP: null,
+      Exam: "",
+      TD: "",
+      TP: "",
     },
   });
 
@@ -59,7 +58,7 @@ const StudentsForm = () => {
       ...value,
       Points: {
         ...value.Points,
-        [e.target.name]: e.target.value,
+        [e.target.name]: parseFloat(e.target.value),
       },
     });
   };
@@ -68,7 +67,7 @@ const StudentsForm = () => {
       ...value,
       Points: {
         ...value.Points,
-        [e.target.name]: e.target.value,
+        [e.target.name]: parseFloat(e.target.value),
       },
     });
   };
@@ -77,7 +76,7 @@ const StudentsForm = () => {
       ...value,
       Points: {
         ...value.Points,
-        [e.target.name]: e.target.value,
+        [e.target.name]: parseFloat(e.target.value),
       },
     });
   };
@@ -88,7 +87,6 @@ const StudentsForm = () => {
     axios.get("http://localhost:4000/get-subject").then((res) => {
       let getdata = res.data;
       setData(getdata);
-      console.log(data);
     });
   }, []);
 
@@ -122,12 +120,24 @@ const StudentsForm = () => {
         variant="outlined"
         label="Exam"
         name="Exam"
+        type='number'
+        step="0.1"
+        min='0'
+        max='20'
+     
         value={value.Points.Exam}
         onChange={handleAddEXAM}
       />
       <TextField
         variant="outlined"
         label="TD"
+        
+       
+        type='number'
+                step="0.1"
+                min='0'
+                max='20'
+      
         value={value.Points.TD}
         name="TD"
         onChange={handleAddTD}
@@ -135,6 +145,11 @@ const StudentsForm = () => {
       <TextField
         variant="outlined"
         label="TP"
+       
+        type='number'
+                step="0.1"
+                min='0'
+                max='20'
         value={value.Points.TP}
         name="TP"
         onChange={handleAddTP}
