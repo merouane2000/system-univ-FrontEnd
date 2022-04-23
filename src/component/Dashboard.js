@@ -1,5 +1,4 @@
 import React from "react";
-
 import {
   makeStyles,
   CssBaseline,
@@ -7,9 +6,7 @@ import {
   ThemeProvider,
   Paper,
 } from "@material-ui/core";
-import PeopleOutlineTwoToneIcon from "@material-ui/icons/PeopleOutlineTwoTone";
 import Header from "./Header";
-import PageHeader from "./PageHeader";
 import SideMenu from "./SideMenu";
 import StudentsForm from "../page/StudentsForm";
 import SubjectForm from "../page/SubjectForm";
@@ -47,10 +44,10 @@ const useStyles = makeStyles({
     paddingLeft: "320px",
     width: "100%",
   },
-  ContentPage:{
-      margin:theme.spacing(5),
-      padding : theme.spacing(3)
-  }
+  ContentPage: {
+    margin: theme.spacing(5),
+    padding: theme.spacing(3),
+  },
 });
 const Dashboard = () => {
   const classes = useStyles();
@@ -59,18 +56,11 @@ const Dashboard = () => {
       <SideMenu />
       <div className={classes.appMain}>
         <Header />
-        <PageHeader
-          title="New Students"
-          subTitle="Page description"
-          icon={<PeopleOutlineTwoToneIcon fontSize="large" />}
-        />
         <Paper className={classes.ContentPage}>
-        <SubjectForm/>
-        
+          <SubjectForm />
         </Paper>
         <Paper className={classes.ContentPage}>
-         <StudentsForm/>
-        
+          <StudentsForm />
         </Paper>
       </div>
       <CssBaseline />

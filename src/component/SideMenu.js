@@ -11,7 +11,7 @@ const style = {
         position: 'absolute',
         left: '0px',
         width: '320px',
-        height: '750px',
+        height: "775px",
         backgroundColor: '#253053'
     }
 }

@@ -1,18 +1,60 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { TextField } from "@material-ui/core";
 import Autocomplete from "@material-ui/lab/Autocomplete";
-import axios from "axios";
 import Button from "@material-ui/core/Button";
+import { Typography, makeStyles } from "@material-ui/core";
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    paddingBottom: "20px",
+  },
+  pageIcon: {
+    display: "inline-block",
+    padding: theme.spacing(0),
+  },
+}));
+const InitialValues = {
+  FirstName: "",
+  FamilyName: "",
+  ClassRoom: "",
+  RegistrationNumber: null,
+  Points: {
+    subjectName: "",
+    Exam: "",
+    TD: "",
+    TP: "",
+    subjectMoyenne: "",
+  },
+  subjectInfo:{
+    IncludeExam: false,
+    includeTD: false,
+    includTP: false,
+    coif: "",
+    credit: "",
+  }
+};
 
 const StudentsForm = () => {
+  const classes = useStyles();
+  const [value, setValue] = useState(InitialValues);
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    axios.get("http://localhost:4000/get-subject").then((res) => {
+      let getdata = res.data;
+      setData(getdata);
+    });
+  }, []);
+
   const handleSubmite = (e) => {
+  console.log(value)
     e.preventDefault();
     axios
       .post(
         "http://localhost:4000/student",
         {
           values: value,
-          datas: data,
+          data: data,
         },
         { headers: { "Content-Type": "application/json" } }
       )
@@ -22,6 +64,7 @@ const StudentsForm = () => {
       .catch((error) => {
         console.log(error.data);
       });
+      console.log(value)
   };
 
   const handleChange = (e) => {
@@ -30,19 +73,6 @@ const StudentsForm = () => {
       [e.target.name]: e.target.value,
     });
   };
-
-  const [value, setValue] = useState({
-    FirstName: "",
-    FamilyName: "",
-    ClassRoom: "",
-    RegistrationNumber: null,
-    Points: {
-      subjectName: "",
-      Exam: "",
-      TD: "",
-      TP: "",
-    },
-  });
 
   const handleAddSubjectName = (e) => {
     setValue({
@@ -53,6 +83,7 @@ const StudentsForm = () => {
       },
     });
   };
+
   const handleAddEXAM = (e) => {
     setValue({
       ...value,
@@ -62,6 +93,7 @@ const StudentsForm = () => {
       },
     });
   };
+
   const handleAddTP = (e) => {
     setValue({
       ...value,
@@ -71,6 +103,7 @@ const StudentsForm = () => {
       },
     });
   };
+
   const handleAddTD = (e) => {
     setValue({
       ...value,
@@ -81,17 +114,15 @@ const StudentsForm = () => {
     });
   };
 
-  const [data, setData] = useState([]);
-
-  useEffect(() => {
-    axios.get("http://localhost:4000/get-subject").then((res) => {
-      let getdata = res.data;
-      setData(getdata);
-    });
-  }, []);
-
   return (
     <form>
+      <div className={classes.root}>
+        <div className={classes.pageIcon}>
+          <Typography variant="h6" component="div">
+            Insert Students{" "}
+          </Typography>
+        </div>
+      </div>
       <TextField
         variant="outlined"
         label="Family Name"
@@ -116,44 +147,6 @@ const StudentsForm = () => {
         name="ClassRoom"
         onChange={handleChange}
       />
-      <TextField
-        variant="outlined"
-        label="Exam"
-        name="Exam"
-        type='number'
-        step="0.1"
-        min='0'
-        max='20'
-     
-        value={value.Points.Exam}
-        onChange={handleAddEXAM}
-      />
-      <TextField
-        variant="outlined"
-        label="TD"
-        
-       
-        type='number'
-                step="0.1"
-                min='0'
-                max='20'
-      
-        value={value.Points.TD}
-        name="TD"
-        onChange={handleAddTD}
-      />
-      <TextField
-        variant="outlined"
-        label="TP"
-       
-        type='number'
-                step="0.1"
-                min='0'
-                max='20'
-        value={value.Points.TP}
-        name="TP"
-        onChange={handleAddTP}
-      />
 
       <Autocomplete
         options={data}
@@ -169,6 +162,41 @@ const StudentsForm = () => {
           />
         )}
       />
+
+      <TextField
+        variant="outlined"
+        label="Exam"
+        name="Exam"
+        type="number"
+        step="0.1"
+        min="0"
+        max="20"
+        value={value.Points.Exam}
+        onChange={handleAddEXAM}
+      />
+      <TextField
+        variant="outlined"
+        label="TD"
+        type="number"
+        step="0.1"
+        min="0"
+        max="20"
+        value={value.Points.TD}
+        name="TD"
+        onChange={handleAddTD}
+      />
+      <TextField
+        variant="outlined"
+        label="TP"
+        type="number"
+        step="0.1"
+        min="0"
+        max="20"
+        value={value.Points.TP}
+        name="TP"
+        onChange={handleAddTP}
+      />
+
       <Button
         type="submit"
         fullWidth
