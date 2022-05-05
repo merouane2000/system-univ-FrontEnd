@@ -1,10 +1,18 @@
 import React, { useState } from "react";
 import { TextField } from "@material-ui/core";
-import Checkbox from "@material-ui/core/Checkbox";
 import Button from "@material-ui/core/Button";
 import axios from "axios";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { Typography, makeStyles } from "@material-ui/core";
+import Dialog from "@material-ui/core/Dialog";
+import MuiDialogTitle from "@material-ui/core/DialogTitle";
+import MuiDialogContent from "@material-ui/core/DialogContent";
+import MuiDialogActions from "@material-ui/core/DialogActions";
+import { Grid } from "@material-ui/core";
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
+import { withStyles } from '@material-ui/core/styles';
+import { connect } from "react-redux";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -16,14 +24,44 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const DialogTitle = withStyles(useStyles)((props) => {
+  const { children, classes, onClose, ...other } = props;
+  return (
+    <MuiDialogTitle disableTypography className={classes.root} {...other}>
+      <Typography variant="h6">{children}</Typography>
+      {onClose ? (
+        <IconButton
+          aria-label="close"
+          className={classes.closeButton}
+          onClick={onClose}
+        >
+          <CloseIcon />
+        </IconButton>
+      ) : null}
+    </MuiDialogTitle>
+  );
+});
+
+const DialogContent = withStyles((theme) => ({
+  root: {
+    padding: theme.spacing(2),
+  },
+}))(MuiDialogContent);
+
+const DialogActions = withStyles((theme) => ({
+  root: {
+    margin: 0,
+    padding: theme.spacing(1),
+  },
+}))(MuiDialogActions);
+
 const InitialValues = {
-  subjectName: "",
-  coif: null,
-  credit: null,
-  EXAM: false,
-  TP: false,
-  TD: false,
-  Semaster: "",
+  name: "",
+  coef: 0,
+  credit: 0,
+  coefTD: 0.2,
+  coefTP: 0.2,
+  coefExam: 0.6,
 };
 
 const Semasters = [
@@ -39,11 +77,19 @@ const Semasters = [
   { Semastername: "M2-S2" },
 ];
 
-const SubjectForm = () => {
+const SubjectForm = (props) => {
+  const handleClose = () => {
+    setOpen(false);
+  };
+  const [open, setOpen] = React.useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
   const classes = useStyles();
   const [value, setValue] = useState(InitialValues);
 
-  const handleSubmite = (e) => {
+  const handleSave = (e) => {
     console.log(value);
 
     e.preventDefault();
@@ -52,15 +98,20 @@ const SubjectForm = () => {
         "http://localhost:4000/subject",
         {
           values: value,
+          selectedClass : props.selectedClass,
+          student_id:props.student._id
         },
         { headers: { "Content-Type": "application/json" } }
       )
       .then((res) => {
+        
+        
         console.log(res);
       })
       .catch((error) => {
         console.log(error.data);
       });
+      handleClose()
   };
 
   const handleAddSemaster = (e) => {
@@ -78,80 +129,120 @@ const SubjectForm = () => {
   };
 
   return (
-    <form>
-      <div className={classes.root}>
-        <div className={classes.pageIcon}>
-          <Typography variant="h6" component="div">
-            Insert Subjects{" "}
-          </Typography>
-        </div>
-      </div>
-      <TextField
-        variant="outlined"
-        label="subjectName"
-        name="subjectName"
-        onChange={handleChange}
-      />
-      <TextField
-        variant="outlined"
-        label="coif"
-        name="coif"
-        onChange={handleChange}
-      />
-      <TextField
-        variant="outlined"
-        label="credit"
-        name="credit"
-        onChange={handleChange}
-      />
-      <Autocomplete
-        id="combo-box-demo"
-        options={Semasters}
-        getOptionLabel={(option) => option.Semastername}
-        style={{ width: 200 }}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Select Semastre"
-            value={value.Semaster}
-            variant="outlined"
-            name="Semaster"
-            onSelect={handleAddSemaster}
-          />
-        )}
-      />
-      EXAM :{" "}
-      <Checkbox
-        name="EXAM"
-        value={!value.EXAM}
-        size="small"
-        onClick={handleChange}
-      />
-      TD{" "}
-      <Checkbox
-        name="TD"
-        value={!value.TD}
-        size="small"
-        onClick={handleChange}
-      />
-      TP{" "}
-      <Checkbox
-        name="TP"
-        value={!value.TP}
-        size="small"
-        onChange={handleChange}
-      />
-      <Button
-        type="submit"
-        fullWidth
-        variant="contained"
-        color="primary"
-        onClick={handleSubmite}
-      >
-        Submit
+    <div>
+      <Button variant="outlined" color="primary" onClick={handleClickOpen}>
+        Insert Subject
       </Button>
-    </form>
+      <Dialog
+        onClose={handleClose}
+        aria-labelledby="customized-dialog-title"
+        open={open}
+      >
+        <DialogTitle id="customized-dialog-title" onClose={handleClose}>
+          Insert subject 
+          {" "}
+          <br/>
+          {props.student.name + "   "}
+          <br/>
+          {props.selectedClass.year+ "  "}
+          <br/>
+          {props.selectedClass.semastre}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid
+            container
+            spacing={3}
+            rowSpacing={1}
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Grid item xs={12}>
+              <TextField
+                variant="outlined"
+                label="name"
+                name="name"
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                variant="outlined"
+                label="coef"
+                name="coef"
+                value={value.coef}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                variant="outlined"
+                label="credit"
+                name="credit"
+                value={value.credit}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField
+                variant="outlined"
+                label="Coef exam"
+                name="coefExam"
+                value={value.coefExam}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField
+                variant="outlined"
+                label="Coef TD"
+                name="coefTD"
+                value={value.coefTD}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField
+                variant="outlined"
+                label="Coef TP"
+                name="coefTP"
+                value={value.coefTP}
+                onChange={handleChange}
+              />
+            </Grid>
+
+            <Grid item xs={6}>
+              
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button autoFocus onClick={handleSave} color="primary">
+            SAVE
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+
+
   );
 };
+const mapDispatchToProps = (dispatch) => {
+  return {
+    updateStudents: (data) => {
+      dispatch({ type: "UPDATE_STUDENTS", payload: data });
+    },
+    updateClass: (data) => {
+      dispatch({ type: "UPDATE_CLASS", payload: data });
+    },
+  };
+};
 
-export default SubjectForm;
+const mapStateToProps = (state) => {
+  return {
+    students: state.students,
+    student: state.selectedStudent,
+    selectedClass:state.selectedClass
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(SubjectForm);
