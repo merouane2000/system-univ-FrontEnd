@@ -15,6 +15,8 @@ import Chip from "@material-ui/core/Chip";
 import Avatar from "@material-ui/core/Avatar";
 import MarksTable from "./MarksTable";
 import axios from "axios";
+import Grid from "@material-ui/core/Grid";
+import Box from '@material-ui/core/Box';
 
 const theme = createMuiTheme({
   palette: {
@@ -50,32 +52,31 @@ const useStyles = makeStyles({
     width: "100%",
   },
   ContentPage: {
-    margin: theme.spacing(5),
-    padding: theme.spacing(3),
+    margin: theme.spacing(2),
+    padding: theme.spacing(2),
   },
 });
 const Dashboard = (props) => {
-
-  const getSubjects = ()=>{
+  const getSubjects = () => {
     axios
-    .post("http://localhost:4000/get-subjects", 
-    {
-      selectedClass: props.selectedClass,
-      student_id: props.student._id,
-    },
-    { headers: { "Content-Type": "application/json" } }
-    )
-    .then((res) => {
-      let listedSubjectes = [...res.data];
-      props.updateSubjects(listedSubjectes);
-      // console.log(listedSubjectes);
-    });
-  }
+      .post(
+        "http://localhost:4000/get-subjects",
+        {
+          selectedClass: props.selectedClass,
+          student_id: props.student._id,
+        },
+        { headers: { "Content-Type": "application/json" } }
+      )
+      .then((res) => {
+        let listedSubjectes = [...res.data];
+        props.updateSubjects(listedSubjectes);
+        // console.log(listedSubjectes);
+      });
+  };
 
   const handleSelectClass = (data) => {
     props.updateClass(data);
-    // console.log(props.selectedClass)
-    getSubjects()
+    getSubjects();
   };
   const listYears = () => {
     const chips = [];
@@ -90,7 +91,7 @@ const Dashboard = (props) => {
             avatar={<Avatar>F</Avatar>}
             label={tmpClass.year + "  |  " + tmpClass.semastre}
             onClick={() => {
-              handleSelectClass( tmpClass );
+              handleSelectClass(tmpClass);
             }}
           />
         );
@@ -103,19 +104,37 @@ const Dashboard = (props) => {
   const chips = listYears();
   return (
     <ThemeProvider theme={theme}>
-      <SideMenu />
-      <div className={classes.appMain}>
-        <Header />
-        <Paper className={classes.ContentPage}>
-          {chips}
-          <MarksTable />
-
-          <SubjectForm />
-        </Paper>
-        <Paper className={classes.ContentPage}>
-          <StudentsForm />
-        </Paper>
-      </div>
+      <Grid container spacing={1}>
+        <Grid item xs={3}>
+          <SideMenu />
+        </Grid>
+        <Grid item xs={9}>
+          <Grid container spacing={1}>
+            <Grid item xs={12}>
+              <Header />
+            </Grid>
+            <Grid item xs={12}>
+              <Paper className={classes.ContentPage}>
+                <StudentsForm />
+              </Paper>
+            </Grid>
+            <Grid item xs={12}>
+              <Paper className={classes.ContentPage}>
+                {chips}
+                <Box component="div" whiteSpace="nowrap">
+                  .
+                </Box>
+                <MarksTable />
+                <br></br>
+                <SubjectForm />
+                <br></br>
+              </Paper>
+            </Grid>
+           
+          </Grid>
+        </Grid>
+      </Grid>
+      {/* <div className={classes.appMain}></div> */}
       <CssBaseline />
     </ThemeProvider>
   );
@@ -138,7 +157,7 @@ const mapStateToProps = (state) => {
   return {
     students: state.students,
     student: state.selectedStudent,
-    selectedClass: state.selectedClass
+    selectedClass: state.selectedClass,
   };
 };
 
