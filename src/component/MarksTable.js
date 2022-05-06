@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { withStyles, makeStyles,alpha } from "@material-ui/core/styles";
-import InputBase from '@material-ui/core/InputBase';
+import { withStyles, makeStyles, alpha } from "@material-ui/core/styles";
+import Button from "@material-ui/core/Button";
+import InputBase from "@material-ui/core/InputBase";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
@@ -10,9 +10,8 @@ import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
 import axios from "axios";
 import { connect } from "react-redux";
-import InputLabel from "@material-ui/core/InputLabel";
-import FormControl from '@material-ui/core/FormControl';
-import TextField from '@material-ui/core/TextField';
+import FormControl from "@material-ui/core/FormControl";
+import Grid from "@material-ui/core/Grid";
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
@@ -32,93 +31,235 @@ const StyledTableRow = withStyles((theme) => ({
   },
 }))(TableRow);
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 700,
   },
-});
-
-const useStylesReddit = makeStyles((theme) => ({
   root: {
-    border: '1px solid #e2e2e1',
-    overflow: 'hidden',
-    borderRadius: 4,
-    backgroundColor: '#fcfcfb',
-    transition: theme.transitions.create(['border-color', 'box-shadow']),
-    '&:hover': {
-      backgroundColor: '#fff',
+    flexGrow: 1,
+  },
+  paper: {
+    padding: theme.spacing(2),
+    textAlign: "center",
+    color: theme.palette.text.secondary,
+  },
+}));
+
+const CustomInput = withStyles((theme) => ({
+  root: {
+    "label + &": {
+      marginTop: theme.spacing(3),
     },
-    '&$focused': {
-      backgroundColor: '#fff',
-      boxShadow: `${alpha(theme.palette.primary.main, 0.25)} 0 0 0 2px`,
+  },
+  input: {
+    borderRadius: 4,
+    position: "relative",
+    backgroundColor: theme.palette.common.white,
+    border: "1px solid #ced4da",
+    fontSize: 14,
+    width: "auto",
+    maxWidth: "35px",
+    padding: "5px 5px",
+    transition: theme.transitions.create(["border-color", "box-shadow"]),
+    fontFamily: [
+      "-apple-system",
+      "BlinkMacSystemFont",
+      '"Segoe UI"',
+      "Roboto",
+      '"Helvetica Neue"',
+      "Arial",
+      "sans-serif",
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"',
+    ].join(","),
+    "&:focus": {
+      boxShadow: `${alpha(theme.palette.primary.main, 0.25)} 0 0 0 0.2rem`,
       borderColor: theme.palette.primary.main,
     },
   },
-  focused: {},
-}));
-
-function RedditTextField(props) {
-  const classes = useStylesReddit();
-  return <TextField InputProps={{ classes, disableUnderline: true, shrink: true  }} {...props} />;
-}
+}))(InputBase);
 
 function MarksTable(props) {
   const classes = useStyles();
-  const subjects = props.selectedListedSubjects;
+  const changeTD = (e, index) => {
+    let clone = [...props.selectedListedSubjects];
+    clone[index].TD = e.target.value;
+    props.updateListedSubjects(clone);
+  };
+
+  const changeTP = (e, index) => {
+    let clone = [...props.selectedListedSubjects];
+    clone[index].TP = e.target.value;
+    props.updateListedSubjects(clone);
+    console.log(e.target.value);
+  };
+
+  const changeExam = (e, index) => {
+    let clone = [...props.selectedListedSubjects];
+    clone[index].exam = e.target.value;
+    props.updateListedSubjects(clone);
+    console.log(e.target.value);
+  };
+
+  const handleUpdate = () => {
+    axios
+      .post(
+        "http://localhost:4000/update-subjects",
+        {
+          selectedClass: props.selectedClass,
+          student_id: props.student._id,
+          subjects: props.selectedListedSubjects,
+        },
+        { headers: { "Content-Type": "application/json" } }
+      )
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((error) => {
+        console.log(error.data);
+      });
+  };
+
+  const calculateAverage = () => {
+    let sum = 0;
+    let coefs = 0;
+    props.selectedListedSubjects.map((subject) => {
+      let local =
+        subject.TD * subject.coefTD +
+        subject.TP * subject.coefTP +
+        subject.exam * subject.coefExam;
+      sum += local * subject.coef;
+      coefs += subject.coef;
+    });
+    return coefs != 0 ? sum / coefs : 0;
+  };
+ const calculateCredit=()=>{
+   if (calculateAverage()>= 10 ) return 30
+   else{
+     let sum = 0  
+    props.selectedListedSubjects.map((subject) => {
+      let local =
+        subject.TD * subject.coefTD +
+        subject.TP * subject.coefTP +
+        subject.exam * subject.coefExam;
+      if (local > 10) sum += subject.credit
+    });
+
+    return sum
+   }
+  }
 
   return (
-    <TableContainer component={Paper}>
-      <Table className={classes.table} aria-label="Marks table">
-        <TableHead>
-          <TableRow>
-            <StyledTableCell>code</StyledTableCell>
-            <StyledTableCell align="right">Subject name</StyledTableCell>
-            <StyledTableCell align="right">Note TD</StyledTableCell>
-            <StyledTableCell align="right">Coef TD</StyledTableCell>
-            <StyledTableCell align="right">Note TP</StyledTableCell>
-            <StyledTableCell align="right">Coef TP</StyledTableCell>
-            <StyledTableCell align="right">Note exam</StyledTableCell>
-            <StyledTableCell align="right">Coef exam</StyledTableCell>
-            <StyledTableCell align="right">Subject Avg</StyledTableCell>
-            <StyledTableCell align="right">Credit</StyledTableCell>
-            <StyledTableCell align="right">Subject Coef</StyledTableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {subjects.map((subject, code) => (
-            <StyledTableRow key={subject.name}>
-              <StyledTableCell align="right">{code}</StyledTableCell>
-              <StyledTableCell component="th" scope="subject">
-                {subject.name}
+    <div>
+      <TableContainer component={Paper}>
+        <Table className={classes.table} aria-label="Marks table">
+          <TableHead>
+            <TableRow>
+              <StyledTableCell>code</StyledTableCell>
+              <StyledTableCell align="right">Subject name</StyledTableCell>
+              <StyledTableCell align="right">Note TD</StyledTableCell>
+              <StyledTableCell align="right">Coef TD</StyledTableCell>
+              <StyledTableCell align="right">Note TP</StyledTableCell>
+              <StyledTableCell align="right">Coef TP</StyledTableCell>
+              <StyledTableCell align="right">Note exam</StyledTableCell>
+              <StyledTableCell align="right">Coef exam</StyledTableCell>
+              <StyledTableCell align="right">Subject Avg</StyledTableCell>
+              <StyledTableCell align="right">Credit</StyledTableCell>
+              <StyledTableCell align="right">Subject Coef</StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {props.selectedListedSubjects.map((subject, index) => (
+              <StyledTableRow key={subject.name}>
+                <StyledTableCell align="right">{index}</StyledTableCell>
+                <StyledTableCell component="th" scope="subject">
+                  {subject.name}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  <FormControl className={classes.margin}>
+                    <CustomInput
+                      defaultValue={subject.TD}
+                      name="TD"
+                      onChange={(e) => changeTD(e, index)}
+                    />
+                  </FormControl>
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {subject.coefTD}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  <FormControl className={classes.margin}>
+                    <CustomInput
+                      defaultValue={subject.TP}
+                      name="TP"
+                      onChange={(e) => changeTP(e, index)}
+                    />
+                  </FormControl>
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {subject.coefTP}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  <FormControl className={classes.margin}>
+                    <CustomInput
+                      defaultValue={subject.exam}
+                      name="exam"
+                      onChange={(e) => changeExam(e, index)}
+                    />
+                  </FormControl>
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {subject.coefExam}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {subject.TD * subject.coefTD +
+                    subject.TP * subject.coefTP +
+                    subject.exam * subject.coefExam}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {subject.credit}
+                </StyledTableCell>
+                <StyledTableCell align="right">{subject.coef}</StyledTableCell>
+              </StyledTableRow>
+            ))}
+            <StyledTableRow>
+              <StyledTableCell align="center"  colSpan={4}>
+                Average mark: {calculateAverage() + "/20"}
               </StyledTableCell>
-              <StyledTableCell align="right">
-              <RedditTextField
-                label="Reddit"
-                className={classes.margin}
-                defaultValue="0"
-                variant="filled"
-                id="reddit-input"
-              />
+              <StyledTableCell align="center" colSpan={5}>
+                Credit: {calculateCredit()+ "/30"}
               </StyledTableCell>
-              <StyledTableCell align="right">{subject.coefTD}</StyledTableCell>
-              <StyledTableCell align="right">{subject.TP}</StyledTableCell>
-              <StyledTableCell align="right">{subject.coefTP}</StyledTableCell>
-              <StyledTableCell align="right">{subject.exam}</StyledTableCell>
-              <StyledTableCell align="right">
-                {subject.coefExam}
+              <StyledTableCell align="left" colSpan={2} >
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={handleUpdate}
+                >
+                  Update
+                </Button>
               </StyledTableCell>
-              <StyledTableCell align="right">
-                {subject.TD * subject.coefTD +
-                  subject.TP * subject.coefTP +
-                  subject.exam * subject.coefExam}
-              </StyledTableCell>
-              <StyledTableCell align="right">{subject.credit}</StyledTableCell>
-              <StyledTableCell align="right">{subject.coef}</StyledTableCell>
             </StyledTableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* <Grid container spacing={12}>
+        <Grid item xs={4}>
+          <Paper className={classes.paper}>Semester Avg : {}</Paper>
+        </Grid>
+        <Grid item xs={4}>
+          <Paper className={classes.paper}>Credit :{} </Paper>
+        </Grid>
+        <Grid item xs={4}>
+          <Paper className={classes.paper}>
+            <Button variant="outlined" color="primary" onClick={handleUpdate}>
+              Update
+            </Button>
+          </Paper>
+        </Grid>
+      </Grid> */}
+    </div>
   );
 }
 const mapDispatchToProps = (dispatch) => {
@@ -128,6 +269,9 @@ const mapDispatchToProps = (dispatch) => {
     },
     updateClass: (data) => {
       dispatch({ type: "UPDATE_CLASS", payload: data });
+    },
+    updateListedSubjects: (data) => {
+      dispatch({ type: "UPDATE_LISTED_SUBJECTS", payload: data });
     },
   };
 };
