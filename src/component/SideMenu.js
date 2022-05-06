@@ -34,9 +34,13 @@ const useStyles = makeStyles((theme) => ({
 
 const SideMenu = (props) => {
   const classes = useStyles();
+  useEffect(()=>{
+    axios.get("http://localhost:4000/get-student-and-promo").then((res) => {
+      setStudents(res.data);
+    });
+  },[props.students])
 
   const handleSelectStudent = student => {
-    //   console.log(student._id)
     props.updateStudent(student);
   }
 
@@ -52,7 +56,6 @@ const SideMenu = (props) => {
           <ListItemSecondaryAction>
             <IconButton
               color="primary"
-              aria-label="add to shopping cart"
               onClick={(e) => handleSelectStudent(student, e)}
             >
               <ChevronRightIcon />
@@ -80,7 +83,6 @@ const SideMenu = (props) => {
 
   return (
     <div className={classes.sideMenu}>
-      <label>Students List </label>
       {studentsList()}
     </div>
   );
