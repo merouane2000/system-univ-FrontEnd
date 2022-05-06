@@ -11,6 +11,7 @@ import MuiDialogActions from "@material-ui/core/DialogActions";
 import IconButton from "@material-ui/core/IconButton";
 import CloseIcon from "@material-ui/icons/Close";
 import { withStyles } from "@material-ui/core/styles";
+import { connect } from "react-redux";
 const useStyles = makeStyles((theme) => ({
   root: {
     paddingBottom: "16px",
@@ -94,7 +95,7 @@ const InitialValues = {
   Semaster: "",
 };
 
-const StudentsForm = () => {
+const StudentsForm = (props) => {
   const classes = useStyles();
   const [value, setValue] = useState(InitialValues);
   const [data, setData] = useState([]);
@@ -118,7 +119,11 @@ const StudentsForm = () => {
         { headers: { "Content-Type": "application/json" } }
       )
       .then((res) => {
-        console.log(res);
+       if(res.data.isCreated){
+         let clone = [...props.students]
+         clone.push(res.data.student)
+         props.updateStudents(clone)
+       }
       })
       .catch((error) => {
         console.log(error.data);
@@ -133,36 +138,6 @@ const StudentsForm = () => {
       [e.target.name]: e.target.value,
     });
   };
-
-  const handleAddSubjectName = (e) => {
-    setValue({
-      ...value,
-      Points: {
-        ...value.Points,
-        [e.target.name]: e.target.value,
-      },
-    });
-  };
-
-  const handleAddEXAM = (e) => {
-    setValue({
-      ...value,
-      Points: {
-        ...value.Points,
-        [e.target.name]: parseFloat(e.target.value),
-      },
-    });
-  };
-
-  const handleAddTP = (e) => {
-    setValue({
-      ...value,
-      Points: {
-        ...value.Points,
-        [e.target.name]: parseFloat(e.target.value),
-      },
-    });
-  };
   const handleAddSemaster = (e) => {
     setValue({
       ...value,
@@ -170,15 +145,6 @@ const StudentsForm = () => {
     });
   };
 
-  const handleAddTD = (e) => {
-    setValue({
-      ...value,
-      Points: {
-        ...value.Points,
-        [e.target.name]: parseFloat(e.target.value),
-      },
-    });
-  };
   const handleClose = () => {
     setOpen(false);
   };
@@ -270,54 +236,6 @@ const StudentsForm = () => {
             </Grid>
           </Grid>
 
-          {/* <Autocomplete
-        options={data}
-        getOptionLabel={(option) => option.subjectName}
-        renderInput={(params) => (
-          <TextField
-            value={value.Points.subjectName}
-            label="subject Name"
-            variant="outlined"
-            name="subjectName"
-            onSelect={handleAddSubjectName}
-            {...params}
-          />
-        )}
-      /> */}
-
-          {/* <TextField
-        variant="outlined"
-        label="Exam"
-        name="Exam"
-        type="number"
-        step="0.1"
-        min="0"
-        max="20"
-        value={value.Points.Exam}
-        onChange={handleAddEXAM}
-      />
-      <TextField
-        variant="outlined"
-        label="TD"
-        type="number"
-        step="0.1"
-        min="0"
-        max="20"
-        value={value.Points.TD}
-        name="TD"
-        onChange={handleAddTD}
-      />
-      <TextField
-        variant="outlined"
-        label="TP"
-        type="number"
-        step="0.1"
-        min="0"
-        max="20"
-        value={value.Points.TP}
-        name="TP"
-        onChange={handleAddTP}
-      /> */}
         </DialogContent>
         <DialogActions>
           <Button autoFocus onClick={handleSubmite} color="primary">
@@ -328,5 +246,23 @@ const StudentsForm = () => {
     </div>
   );
 };
+const mapDispatchToProps = (dispatch) => {
+  return {
+    updateStudents: (data) => {
+      dispatch({ type: "UPDATE_STUDENTS", payload: data });
+    }
+  };
+};
 
-export default StudentsForm;
+const mapStateToProps = (state) => {
+  return {
+    students: state.students,
+    student: state.selectedStudent,
+    selectedClass: state.selectedClass,
+  };
+};
+
+export default  connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(StudentsForm);
