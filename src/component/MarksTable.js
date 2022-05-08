@@ -11,7 +11,6 @@ import Paper from "@material-ui/core/Paper";
 import axios from "axios";
 import { connect } from "react-redux";
 import FormControl from "@material-ui/core/FormControl";
-import Grid from "@material-ui/core/Grid";
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
@@ -243,22 +242,6 @@ function MarksTable(props) {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* <Grid container spacing={12}>
-        <Grid item xs={4}>
-          <Paper className={classes.paper}>Semester Avg : {}</Paper>
-        </Grid>
-        <Grid item xs={4}>
-          <Paper className={classes.paper}>Credit :{} </Paper>
-        </Grid>
-        <Grid item xs={4}>
-          <Paper className={classes.paper}>
-            <Button variant="outlined" color="primary" onClick={handleUpdate}>
-              Update
-            </Button>
-          </Paper>
-        </Grid>
-      </Grid> */}
     </div>
   );
 }
