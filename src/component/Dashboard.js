@@ -134,7 +134,6 @@ const Dashboard = (props) => {
           </Grid>
         </Grid>
       </Grid>
-      {/* <div className={classes.appMain}></div> */}
       <CssBaseline />
     </ThemeProvider>
   );
