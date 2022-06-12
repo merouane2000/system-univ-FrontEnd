@@ -52,7 +52,7 @@ const SideMenu = (props) => {
           <ListItemIcon>
             <AccountCircleIcon />
           </ListItemIcon>
-          <ListItemText id="switch-list-label-wifi" primary={student.name} />
+          <ListItemText id="switch-list-label-wifi" primary={student.familyName} />
           <ListItemSecondaryAction>
             <IconButton
               color="primary"
