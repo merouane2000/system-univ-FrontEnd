@@ -124,30 +124,30 @@ function MarksTable(props) {
     let sum = 0;
     let coefs = 0;
     props.selectedListedSubjects.map((subject) => {
-      let local =
+      let local = 
         subject.TD * subject.coefTD +
         subject.TP * subject.coefTP +
         subject.exam * subject.coefExam;
       sum += local * subject.coef;
       coefs += subject.coef;
     });
-    return coefs != 0 ? sum / coefs : 0;
+    return coefs != 0 ? parseFloat(sum / coefs ).toFixed(2) : 0;
   };
- const calculateCredit=()=>{
-   if (calculateAverage()>= 10 ) return 30
-   else{
-     let sum = 0  
-    props.selectedListedSubjects.map((subject) => {
-      let local =
-        subject.TD * subject.coefTD +
-        subject.TP * subject.coefTP +
-        subject.exam * subject.coefExam;
-      if (local > 10) sum += subject.credit
-    });
+  const calculateCredit = () => {
+    if (calculateAverage() >= 10) return 30;
+    else {
+      let sum = 0;
+      props.selectedListedSubjects.map((subject) => {
+        let local =
+          subject.TD * subject.coefTD +
+          subject.TP * subject.coefTP +
+          subject.exam * subject.coefExam;
+        if (local > 10) sum += subject.credit;
+      });
 
-    return sum
-   }
-  }
+      return sum;
+    }
+  };
 
   return (
     <div>
@@ -157,12 +157,12 @@ function MarksTable(props) {
             <TableRow>
               <StyledTableCell>code</StyledTableCell>
               <StyledTableCell align="right">Subject name</StyledTableCell>
+              <StyledTableCell align="right">Note exam</StyledTableCell>
+              <StyledTableCell align="right">Coef exam</StyledTableCell>
               <StyledTableCell align="right">Note TD</StyledTableCell>
               <StyledTableCell align="right">Coef TD</StyledTableCell>
               <StyledTableCell align="right">Note TP</StyledTableCell>
               <StyledTableCell align="right">Coef TP</StyledTableCell>
-              <StyledTableCell align="right">Note exam</StyledTableCell>
-              <StyledTableCell align="right">Coef exam</StyledTableCell>
               <StyledTableCell align="right">Subject Avg</StyledTableCell>
               <StyledTableCell align="right">Credit</StyledTableCell>
               <StyledTableCell align="right">Subject Coef</StyledTableCell>
@@ -174,6 +174,18 @@ function MarksTable(props) {
                 <StyledTableCell align="right">{index}</StyledTableCell>
                 <StyledTableCell component="th" scope="subject">
                   {subject.name}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  <FormControl className={classes.margin}>
+                    <CustomInput
+                      defaultValue={subject.exam}
+                      name="exam"
+                      onChange={(e) => changeExam(e, index)}
+                    />
+                  </FormControl>
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {subject.coefExam}
                 </StyledTableCell>
                 <StyledTableCell align="right">
                   <FormControl className={classes.margin}>
@@ -200,21 +212,9 @@ function MarksTable(props) {
                   {subject.coefTP}
                 </StyledTableCell>
                 <StyledTableCell align="right">
-                  <FormControl className={classes.margin}>
-                    <CustomInput
-                      defaultValue={subject.exam}
-                      name="exam"
-                      onChange={(e) => changeExam(e, index)}
-                    />
-                  </FormControl>
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  {subject.coefExam}
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  {subject.TD * subject.coefTD +
+                  {parseFloat(subject.TD * subject.coefTD +
                     subject.TP * subject.coefTP +
-                    subject.exam * subject.coefExam}
+                    subject.exam * subject.coefExam).toFixed(2)}
                 </StyledTableCell>
                 <StyledTableCell align="right">
                   {subject.credit}
@@ -223,13 +223,13 @@ function MarksTable(props) {
               </StyledTableRow>
             ))}
             <StyledTableRow>
-              <StyledTableCell align="center"  colSpan={4}>
+              <StyledTableCell align="center" colSpan={4}>
                 Average mark: {calculateAverage() + "/20"}
               </StyledTableCell>
               <StyledTableCell align="center" colSpan={5}>
-                Credit: {calculateCredit()+ "/30"}
+                Credit: {calculateCredit() + "/30"}
               </StyledTableCell>
-              <StyledTableCell align="left" colSpan={2} >
+              <StyledTableCell align="left" colSpan={2}>
                 <Button
                   variant="outlined"
                   color="primary"
