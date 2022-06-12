@@ -48,12 +48,12 @@ const columns = [
     width: 200,
     editable: true,
   },
-  {
-    field: "credit",
-    headerName: "Credit",
-    width: 200,
-    editable: true,
-  },
+  // {
+  //   field: "credit",
+  //   headerName: "Credit",
+  //   width: 200,
+  //   editable: true,
+  // },
 ];
 const Promo = [
   { classYear: "2013/2012" },
@@ -96,7 +96,7 @@ export default function StudentsResults() {
         coefs += subject.coef;
       }
     });
-    return coefs != 0 ? sum / coefs : 0;
+    return coefs != 0 ? parseFloat(sum / coefs ).toFixed(2) : 0;
   };
 
   const calculateCredit = (subjects) => {
@@ -144,7 +144,7 @@ export default function StudentsResults() {
         student.credit = 30;
       }
       if (avg < 10 && avg > 9.5) student.admission = "ACCEPTED / DEBT";
-      if (avg < 9.5 && avg >= 9) student.admission = "RACHA";
+      if (avg < 9.5 && avg >= 9) student.admission = "RACHAT";
       if (avg < 9) student.admission = "REJECTED";
 
       return student;
