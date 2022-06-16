@@ -1,4 +1,5 @@
 import { withStyles, makeStyles, alpha } from "@material-ui/core/styles";
+import React, { useState, useEffect } from "react";
 import Button from "@material-ui/core/Button";
 import InputBase from "@material-ui/core/InputBase";
 import Table from "@material-ui/core/Table";
@@ -11,6 +12,11 @@ import Paper from "@material-ui/core/Paper";
 import axios from "axios";
 import { connect } from "react-redux";
 import FormControl from "@material-ui/core/FormControl";
+import CheckCircleTwoToneIcon from "@material-ui/icons/CheckCircleTwoTone";
+import Snackbar from "@material-ui/core/Snackbar";
+import Slide from "@material-ui/core/Slide";
+import Fade from "@material-ui/core/Fade";
+import Alert from "@material-ui/lab/Alert";
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
@@ -41,6 +47,21 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
     textAlign: "center",
     color: theme.palette.text.secondary,
+  },
+  button: {
+    marginBottom: 5,
+  },
+  icon: {
+    marginRight: 20,
+  },
+  nobutton: {
+    marginLeft: 570,
+   
+  },
+  Alert: {
+    alignItems: "center",
+    justifyContent: "space-between"
+   
   },
 }));
 
@@ -124,14 +145,14 @@ function MarksTable(props) {
     let sum = 0;
     let coefs = 0;
     props.selectedListedSubjects.map((subject) => {
-      let local = 
+      let local =
         subject.TD * subject.coefTD +
         subject.TP * subject.coefTP +
         subject.exam * subject.coefExam;
       sum += local * subject.coef;
       coefs += subject.coef;
     });
-    return coefs != 0 ? parseFloat(sum / coefs ).toFixed(2) : 0;
+    return coefs != 0 ? parseFloat(sum / coefs).toFixed(2) : 0;
   };
   const calculateCredit = () => {
     if (calculateAverage() >= 10) return 30;
@@ -149,8 +170,66 @@ function MarksTable(props) {
     }
   };
 
+  const [state, setState] = useState({ severity: "", Msg: "", visibility: "hidden" });
+
+  const calculateSubjectAverage = (subject) => {
+    let subjectAvg = 0;
+    return (subjectAvg = parseFloat(
+      subject.TD * subject.coefTD +
+        subject.TP * subject.coefTP +
+        subject.exam * subject.coefExam
+    ).toFixed(2));
+  };
+  const handelRechat = (subject) => {
+    var addedValueExam = parseFloat(10 - subject.exam).toFixed(2);
+    var addedValueTP = parseFloat(10 - subject.TP).toFixed(2);
+    var addedValueTD = parseFloat(10 - subject.TD).toFixed(2);
+    if (addedValueExam > 10) {
+      addedValueExam = addedValueExam;
+    }
+    if (subject.coefTD == 0 || 10 - subject.TD < 0) {
+      addedValueTD = 0;
+    } else {
+      addedValueTD = addedValueTD;
+    }
+    if (subject.coefTP == 0 || 10 - subject.TP < 0) {
+      addedValueTP = 0;
+    } else {
+      addedValueTP = addedValueTP;
+    }
+    setState({
+      severity: "success",
+      Msg:
+        " you add " +
+        Number(addedValueExam).toFixed(2)  +
+        " in Exam and " +
+        Number(addedValueTD).toFixed(2)  +
+        " in TD and " +
+        Number(addedValueTP).toFixed(2)  +
+        " in TP",
+      visibility: "visible",
+    });
+    let subjectAvg = 0;
+    return (subjectAvg = 10.00);
+  };
+
   return (
     <div>
+      <Alert severity={state.severity} className={classes.Alert}>
+        {state.Msg}
+        <Button
+          variant="outlined"
+          size="small"
+          color="secondary"
+          style={{visibility: state.visibility }}
+          className={classes.nobutton}
+        
+        >
+          Undo
+        </Button>
+        
+      </Alert>
+      .
       <TableContainer component={Paper}>
         <Table className={classes.table} aria-label="Marks table">
           <TableHead>
@@ -166,6 +245,7 @@ function MarksTable(props) {
               <StyledTableCell align="right">Subject Avg</StyledTableCell>
               <StyledTableCell align="right">Credit</StyledTableCell>
               <StyledTableCell align="right">Subject Coef</StyledTableCell>
+              <StyledTableCell align="right">Validation </StyledTableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -212,18 +292,35 @@ function MarksTable(props) {
                   {subject.coefTP}
                 </StyledTableCell>
                 <StyledTableCell align="right">
-                  {parseFloat(subject.TD * subject.coefTD +
-                    subject.TP * subject.coefTP +
-                    subject.exam * subject.coefExam).toFixed(2)}
+                  {calculateSubjectAverage(subject)}
                 </StyledTableCell>
                 <StyledTableCell align="right">
                   {subject.credit}
                 </StyledTableCell>
                 <StyledTableCell align="right">{subject.coef}</StyledTableCell>
+                <StyledTableCell align="right">
+                  {calculateAverage() >= 10 ? (
+                    <CheckCircleTwoToneIcon className={classes.icon} />
+                  ) : calculateSubjectAverage(subject) < 10 ? (
+                    <>
+                      <Button
+                        className={classes.button}
+                        variant="outlined"
+                        size="small"
+                        color="primary"
+                        onClick={() => handelRechat(subject)}
+                      >
+                        Yes
+                      </Button>
+                    </>
+                  ) : (
+                    <CheckCircleTwoToneIcon className={classes.icon} />
+                  )}
+                </StyledTableCell>
               </StyledTableRow>
             ))}
             <StyledTableRow>
-              <StyledTableCell align="center" colSpan={4}>
+              <StyledTableCell align="center" colSpan={5}>
                 Average mark: {calculateAverage() + "/20"}
               </StyledTableCell>
               <StyledTableCell align="center" colSpan={5}>
