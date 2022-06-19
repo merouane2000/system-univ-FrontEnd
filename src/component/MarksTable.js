@@ -1,5 +1,5 @@
 import { withStyles, makeStyles, alpha } from "@material-ui/core/styles";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Button from "@material-ui/core/Button";
 import InputBase from "@material-ui/core/InputBase";
 import Table from "@material-ui/core/Table";
@@ -13,9 +13,6 @@ import axios from "axios";
 import { connect } from "react-redux";
 import FormControl from "@material-ui/core/FormControl";
 import CheckCircleTwoToneIcon from "@material-ui/icons/CheckCircleTwoTone";
-import Snackbar from "@material-ui/core/Snackbar";
-import Slide from "@material-ui/core/Slide";
-import Fade from "@material-ui/core/Fade";
 import Alert from "@material-ui/lab/Alert";
 
 const StyledTableCell = withStyles((theme) => ({
@@ -55,13 +52,11 @@ const useStyles = makeStyles((theme) => ({
     marginRight: 20,
   },
   nobutton: {
-    marginLeft: 570,
-   
+    marginLeft: 400,
   },
   Alert: {
     alignItems: "center",
-    justifyContent: "space-between"
-   
+    justifyContent: "space-between",
   },
 }));
 
@@ -102,6 +97,7 @@ const CustomInput = withStyles((theme) => ({
 
 function MarksTable(props) {
   const classes = useStyles();
+  
   const changeTD = (e, index) => {
     let clone = [...props.selectedListedSubjects];
     clone[index].TD = e.target.value;
@@ -170,29 +166,41 @@ function MarksTable(props) {
     }
   };
 
-  const [state, setState] = useState({ severity: "", Msg: "", visibility: "hidden" });
+  const [state, setState] = useState({
+    severity: "",
+    Msg: "",
+    visibility: "hidden",
+    name:"",
+      addedValueExam:0,
+      addedValueTP:0,
+      addedValueTD:0,
+  
+  });
 
   const calculateSubjectAverage = (subject) => {
-    let subjectAvg = 0;
+let subjectAvg = 0
     return (subjectAvg = parseFloat(
       subject.TD * subject.coefTD +
         subject.TP * subject.coefTP +
         subject.exam * subject.coefExam
     ).toFixed(2));
   };
-  const handelRechat = (subject) => {
-    var addedValueExam = parseFloat(10 - subject.exam).toFixed(2);
-    var addedValueTP = parseFloat(10 - subject.TP).toFixed(2);
-    var addedValueTD = parseFloat(10 - subject.TD).toFixed(2);
+  const handelRechat = (index) => {
+    let  clone = [...props.selectedListedSubjects];
+    let  namesubject = clone[index].name
+
+    var addedValueExam = parseFloat(10 - clone[index].exam).toFixed(2);
+    var addedValueTP = parseFloat(10 - clone[index].TP).toFixed(2);
+    var addedValueTD = parseFloat(10 - clone[index].TD).toFixed(2);
     if (addedValueExam > 10) {
       addedValueExam = addedValueExam;
     }
-    if (subject.coefTD == 0 || 10 - subject.TD < 0) {
+    if (clone[index].coefTD === 0 || 10 - clone[index].TD < 0) {
       addedValueTD = 0;
     } else {
       addedValueTD = addedValueTD;
     }
-    if (subject.coefTP == 0 || 10 - subject.TP < 0) {
+    if (clone[index].coefTP === 0 || 10 - clone[index].TP < 0) {
       addedValueTP = 0;
     } else {
       addedValueTP = addedValueTP;
@@ -200,17 +208,40 @@ function MarksTable(props) {
     setState({
       severity: "success",
       Msg:
-        " you add " +
-        Number(addedValueExam).toFixed(2)  +
+        " you add to " +
+        clone[index].name +
+        "  " +
+        Number(addedValueExam).toFixed(2) +
         " in Exam and " +
-        Number(addedValueTD).toFixed(2)  +
+        Number(addedValueTD).toFixed(2) +
         " in TD and " +
-        Number(addedValueTP).toFixed(2)  +
+        Number(addedValueTP).toFixed(2) +
         " in TP",
       visibility: "visible",
+      name:namesubject,
+      addedValueExam:Number(addedValueExam).toFixed(2),
+      addedValueTP: Number(addedValueTD).toFixed(2),
+      addedValueTD:Number(addedValueTP).toFixed(2),
     });
-    let subjectAvg = 0;
-    return (subjectAvg = 10.00);
+    clone[index].exam = 10;
+    clone[index].TP = 10;
+    clone[index].TD = 10;
+ 
+   
+    console.log(state)
+    props.updateListedSubjects(clone);
+  };
+  const handelUndoChanges = () => {
+    let  clone = [...props.selectedListedSubjects];
+clone.map(subject=>{
+ if (subject.name === state.name ){
+  subject.exam = subject.exam-state.addedValueExam
+  subject.tp = subject.exam-state.addedValueTP
+  subject.td = subject.exam-state.addedValueTD
+  
+  props.updateListedSubjects(clone); 
+ }
+})
   };
 
   return (
@@ -221,13 +252,12 @@ function MarksTable(props) {
           variant="outlined"
           size="small"
           color="secondary"
-          style={{visibility: state.visibility }}
+          style={{ visibility: state.visibility }}
           className={classes.nobutton}
-        
+          onClick={handelUndoChanges}
         >
           Undo
         </Button>
-        
       </Alert>
       .
       <TableContainer component={Paper}>
@@ -308,7 +338,7 @@ function MarksTable(props) {
                         variant="outlined"
                         size="small"
                         color="primary"
-                        onClick={() => handelRechat(subject)}
+                        onClick={() => handelRechat(index)}
                       >
                         Yes
                       </Button>
