@@ -5,6 +5,7 @@ import { Grid, TextField } from "@material-ui/core";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import Paper from "@material-ui/core/Paper";
 import { makeStyles } from "@material-ui/core/styles";
+import { connect } from "react-redux";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,12 +49,6 @@ const columns = [
     width: 200,
     editable: true,
   },
-  // {
-  //   field: "credit",
-  //   headerName: "Credit",
-  //   width: 200,
-  //   editable: true,
-  // },
 ];
 const Promo = [
   { classYear: "2013/2012" },
@@ -81,7 +76,7 @@ const Semasters = [
   { Semastername: "M2-S2" },
 ];
 
-export default function StudentsResults() {
+function StudentsResults(props) {
   const classes = useStyles();
   const calculateAverage = (subjects) => {
     let sum = 0;
@@ -96,22 +91,9 @@ export default function StudentsResults() {
         coefs += subject.coef;
       }
     });
-    return coefs != 0 ? parseFloat(sum / coefs ).toFixed(2) : 0;
+    return coefs != 0 ? parseFloat(sum / coefs).toFixed(2) : 0;
   };
 
-  const calculateCredit = (subjects) => {
-    let sum = 0;
-    subjects.map((subject) => {
-      if (subject.semester === semester && subject.year === promo) {
-        let local =
-          subject.TD * subject.coefTD +
-          subject.TP * subject.coefTP +
-          subject.exam * subject.coefExam;
-        if (local > 10) sum += subject.credit;
-      }
-    });
-    return sum;
-  };
 
   const [data, setData] = useState([]);
   const [semester, setSemester] = useState("");
@@ -121,38 +103,33 @@ export default function StudentsResults() {
   const selectCurrentStudents = () => {
     let listedStudents = [];
     data.map((student) => {
-      console.log(`${promo} ooo ${semester}`);
       const output = student.classes.some(
         (cls) => cls.year === promo && cls.semastre === semester
       );
-      console.log(output);
       if (output) listedStudents.push(student);
     });
     setCurrentStudents(listedStudents);
   };
-
   const calculateCurrentStudentAverage = () => {
+    let rachat = props.rachatavg
+
     let clone = [...currentStudents];
     clone = clone.map((student) => {
       const subjects = student.subjects;
       const avg = calculateAverage(subjects);
-      const credit = calculateCredit(subjects);
-      student.credit = credit;
       student.avg = avg;
-      if (avg >= 10) {
-        student.admission = "ACCEPTED";
-        student.credit = 30;
-      }
-      if (avg < 10 && avg > 9.5) student.admission = "ACCEPTED / DEBT";
-      if (avg < 9.5 && avg >= 9) student.admission = "RACHAT";
+      if (avg >=10) student.admission = "ACCEPTED";  
+      if (avg < 10 && avg >=parseFloat(props.rachatavg)) student.admission = "RACHAT";
+      if (avg < parseFloat(props.rachatavg) && avg >= 9) student.admission = "ACCEPTED/DEBT";
       if (avg < 9) student.admission = "REJECTED";
-
+      
       return student;
     });
+
     setCurrentStudents(clone);
   };
 
-  useEffect(() => {}, [data]);
+  useEffect(() => {}, [data]); 
   useEffect(() => {
     calculateCurrentStudentAverage();
   }, [currentStudents]);
@@ -234,3 +211,11 @@ export default function StudentsResults() {
     </div>
   );
 }
+
+
+const mapStateToProps = (state) => {
+  return {
+    rachatavg: state.rachatAVG,
+  };
+};
+export default connect(mapStateToProps)(StudentsResults);
