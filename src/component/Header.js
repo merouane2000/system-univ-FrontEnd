@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -7,13 +7,15 @@ import {
   makeStyles,
 } from "@material-ui/core";
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
-import SearchIcon from "@material-ui/icons/Search";
+
 import Button from "@material-ui/core/Button";
 import { useNavigate } from "react-router-dom";
+import { connect } from "react-redux";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     backgroundColor: "#fff",
+    fontColor:"black"
   },
   searchInput: {
     opacity: "0.6",
@@ -28,20 +30,35 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function Header() {
+function Header(props) {
   const classes = useStyles();
   const navigate = useNavigate();
+  const [state,setState] = useState()
+  
+  const handelSendRachatAVG=()=>{
+    let clone = props.rachatavg;
+    clone = state
+    props.updateRachatAVG(clone)
+  }
 
+  
   return (
     <AppBar position="static" className={classes.root}>
       <Toolbar>
         <Grid container alignItems="center">
           <Grid item>
             <InputBase
-              placeholder="Search topics"
+              placeholder="The RACHAT AVG"
               className={classes.searchInput}
-              startAdornment={<SearchIcon fontSize="small" />}
+              value={state}
+              onChange={(e) => {
+                setState(e.target.value);
+              }}
+              
             />
+            <Button type="submit" variant="contained" color="primary" onClick={handelSendRachatAVG}>
+             Submit
+            </Button>
           </Grid>
           <Grid item sm></Grid>
           <Grid item>
@@ -60,3 +77,17 @@ export default function Header() {
     </AppBar>
   );
 }
+const mapDispatchToProps = (dispatch) => {
+  return {
+    updateRachatAVG: (data) => {
+      dispatch({ type: "UPDATE_RACHAT_AVG", payload: data });
+    },
+  };
+};
+
+const mapStateToProps = (state) => {
+  return {
+    rachatavg: state.rachatAVG,
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(Header);
