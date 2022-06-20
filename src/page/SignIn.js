@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import CssBaseline from "@material-ui/core/CssBaseline";
@@ -14,6 +14,11 @@ import { makeStyles } from "@material-ui/core/styles";
 import Container from "@material-ui/core/Container";
 import axios from "axios";
 import { useNavigate  } from "react-router-dom";
+import Radio from "@material-ui/core/Radio";
+import RadioGroup from "@material-ui/core/RadioGroup";
+
+import FormControl from "@material-ui/core/FormControl";
+import FormLabel from "@material-ui/core/FormLabel";
 
 function Copyright() {
   return (
@@ -54,16 +59,22 @@ export default function SignIn() {
     e.preventDefault();
     axios
     .post(
-      "http://localhost:4000/admin/login",
+      "http://localhost:4000/user/login",
       {
         email: Email,
         password: Password,
+        role:Role
       },
       { headers: { "Content-Type": "application/json" } }
       )
       .then((res) => {
-       if(res.data.IsCreated === true){
+        console.log(res.data.role)
+        
+       if(res.data.IsCreated === true && res.data.role ==="Admin"){
         navigate('/admin/dashboard');
+        }
+       if(res.data.IsCreated === true && res.data.role === "Teacher"){
+        navigate('/teacher/dashboard');
         }
       })
       .catch((error) => {
@@ -75,6 +86,10 @@ export default function SignIn() {
   const classes = useStyles();
   const [Email, SetEmail] = useState("");
   const [Password, SetPassword] = useState("");
+  const [Role, setRole] = useState("Admin");
+
+
+
 
   return (
     <Container component="main" maxWidth="xs">
@@ -84,7 +99,7 @@ export default function SignIn() {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Admin
+          SignIn
         </Typography>
         <form className={classes.form} noValidate>
           <TextField
@@ -117,10 +132,39 @@ export default function SignIn() {
               SetPassword(e.target.value);
             }}
           />
+          .
+           <Grid item xs={12}>
+                <Grid item xs={12}>
+                  <FormControl component="fieldset">
+                    <FormLabel component="legend">SignIn As : </FormLabel>
+                    <RadioGroup row
+                      aria-label="gender"
+                      name="Role"
+                      value={Role}
+                     
+                    >
+                      <FormControlLabel
+                        value="Admin"
+                        control={<Radio />}
+                        label="Admin"
+                        onChange={(e)=>{setRole(e.target.value)}}
+                      />
+                      <FormControlLabel
+                        value="Teacher"
+                        control={<Radio />}
+                        label="Teacher"
+                        onChange={(e) =>{setRole(e.target.value )}}
+
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+              </Grid>
           <FormControlLabel
             control={<Checkbox value="remember" color="primary" checked />}
             label="Remember me"
           />
+          
           <Button
             type="submit"
             fullWidth
