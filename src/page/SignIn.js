@@ -74,7 +74,8 @@ export default function SignIn() {
         navigate('/admin/dashboard');
         }
        if(res.data.IsCreated === true && res.data.role === "Teacher"){
-        navigate('/teacher/dashboard');
+        navigate('/teacher/dashboard'  );
+        sessionStorage.setItem("email" , Email)
         }
       })
       .catch((error) => {
