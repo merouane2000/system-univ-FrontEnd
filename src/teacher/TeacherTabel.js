@@ -1,5 +1,5 @@
 import { withStyles, makeStyles, alpha } from "@material-ui/core/styles";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "@material-ui/core/Button";
 import InputBase from "@material-ui/core/InputBase";
 import Table from "@material-ui/core/Table";
@@ -12,16 +12,12 @@ import Paper from "@material-ui/core/Paper";
 import axios from "axios";
 import { connect } from "react-redux";
 import FormControl from "@material-ui/core/FormControl";
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import { TextField } from "@material-ui/core";
 import CheckCircleTwoToneIcon from "@material-ui/icons/CheckCircleTwoTone";
-import Alert from "@material-ui/lab/Alert";
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import SideMenu from "../component/SideMenu";
+
 import Grid from "@material-ui/core/Grid";
-import Chip from "@material-ui/core/Chip";
-import Avatar from "@material-ui/core/Avatar";
-import Box from '@material-ui/core/Box';
+import UiAppBar from "../component/UiAppBar";
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
@@ -68,16 +64,16 @@ const useStyles = makeStyles((theme) => ({
   },
   layout: {
     width: 1000,
+
     marginLeft: theme.spacing(3),
     marginRight: theme.spacing(3),
-    [theme.breakpoints.up(1000 + theme.spacing(2) * 2)]: {
-      width: 1000,
-      marginLeft: 'auto',
-      marginRight: 'auto',
+    [theme.breakpoints.up(600 + theme.spacing(2) * 2)]: {
+      marginLeft: "auto",
+      marginRight: "auto",
     },
   },
   paper: {
-
+    width: 1000,
     marginTop: theme.spacing(3),
     marginBottom: theme.spacing(3),
     padding: theme.spacing(2),
@@ -123,10 +119,42 @@ const CustomInput = withStyles((theme) => ({
     },
   },
 }))(InputBase);
+const Promo = [
+  { classYear: "2013/2012" },
+  { classYear: "2014/2013" },
+  { classYear: "2015/2014" },
+  { classYear: "2016/2015" },
+  { classYear: "2017/2016" },
+  { classYear: "2018/2017" },
+  { classYear: "2019/2018" },
+  { classYear: "2020/2019" },
+  { classYear: "2021/2020" },
+  { classYear: "2022/2021" },
+  { classYear: "2023/2022" },
+];
+const Semasters = [
+  { Semastername: "L1-S1" },
+  { Semastername: "L1-S2" },
+  { Semastername: "L2-S1" },
+  { Semastername: "L2-S2" },
+  { Semastername: "L3-S1" },
+  { Semastername: "L3-S2" },
+  { Semastername: "M1-S1" },
+  { Semastername: "M1-S2" },
+  { Semastername: "M2-S1" },
+  { Semastername: "M2-S2" },
+];
 
 function TeacherTabel(props) {
   const classes = useStyles();
-  
+  const [data, setData] = useState([]);
+  const [semester, setSemester] = useState("");
+  const [promo, setPromo] = useState("");
+  const [currentStudents, setCurrentStudents] = useState([]);
+  const [underAvgStudet, setUnderAvgStudet] = useState([]);
+  const [teacherSubject, setTeacherSubject] = useState("");
+  const [addedValue , setAddedValue]=useState()
+
   const changeTD = (e, index) => {
     let clone = [...props.selectedListedSubjects];
     clone[index].TD = e.target.value;
@@ -147,284 +175,255 @@ function TeacherTabel(props) {
     console.log(e.target.value);
   };
 
-  const handleUpdate = () => {
-    axios
-      .post(
-        "http://localhost:4000/update-subjects",
-        {
-          selectedClass: props.selectedClass,
-          student_id: props.student._id,
-          subjects: props.selectedListedSubjects,
-        },
-        { headers: { "Content-Type": "application/json" } }
-      )
-      .then((res) => {
-        console.log(res);
-      })
-      .catch((error) => {
-        console.log(error.data);
-      });
-  };
-
-  const calculateAverage = () => {
+  const calculateAverage = (subjects) => {
     let sum = 0;
     let coefs = 0;
-    props.selectedListedSubjects.map((subject) => {
-      let local =
-        subject.TD * subject.coefTD +
-        subject.TP * subject.coefTP +
-        subject.exam * subject.coefExam;
-      sum += local * subject.coef;
-      coefs += subject.coef;
-    });
-    return coefs != 0 ? parseFloat(sum / coefs).toFixed(2) : 0;
-  };
-  const calculateCredit = () => {
-    if (calculateAverage() >= 10) return 30;
-    else {
-      let sum = 0;
-      props.selectedListedSubjects.map((subject) => {
+    subjects.map((subject) => {
+      if (subject.semester === semester && subject.year === promo) {
         let local =
           subject.TD * subject.coefTD +
           subject.TP * subject.coefTP +
           subject.exam * subject.coefExam;
-        if (local > 10) sum += subject.credit;
-      });
-
-      return sum;
-    }
-  };
-
-  const [state, setState] = useState({
-    severity: "",
-    Msg: "",
-    visibility: "hidden",
-    name:"",
-      addedValueExam:0,
-      addedValueTP:0,
-      addedValueTD:0,
-  
-  });
-
-  const calculateSubjectAverage = (subject) => {
-let subjectAvg = 0
-    return (subjectAvg = parseFloat(
-      subject.TD * subject.coefTD +
-        subject.TP * subject.coefTP +
-        subject.exam * subject.coefExam
-    ).toFixed(2));
-  };
-  const handelRechat = (index) => {
-    let  clone = [...props.selectedListedSubjects];
-    let  namesubject = clone[index].name
-
-    var addedValueExam = parseFloat(10 - clone[index].exam).toFixed(2);
-    var addedValueTP = parseFloat(10 - clone[index].TP).toFixed(2);
-    var addedValueTD = parseFloat(10 - clone[index].TD).toFixed(2);
-    if (addedValueExam > 10) {
-      addedValueExam = addedValueExam;
-    }
-    if (clone[index].coefTD === 0 || 10 - clone[index].TD < 0) {
-      addedValueTD = 0;
-    } else {
-      addedValueTD = addedValueTD;
-    }
-    if (clone[index].coefTP === 0 || 10 - clone[index].TP < 0) {
-      addedValueTP = 0;
-    } else {
-      addedValueTP = addedValueTP;
-    }
-    setState({
-      severity: "success",
-      Msg:
-        " you add to " +
-        clone[index].name +
-        "  " +
-        Number(addedValueExam).toFixed(2) +
-        " in Exam and " +
-        Number(addedValueTD).toFixed(2) +
-        " in TD and " +
-        Number(addedValueTP).toFixed(2) +
-        " in TP",
-      visibility: "visible",
-      name:namesubject,
-      addedValueExam:Number(addedValueExam).toFixed(2),
-      addedValueTP: Number(addedValueTD).toFixed(2),
-      addedValueTD:Number(addedValueTP).toFixed(2),
+        sum += local * subject.coef;
+        coefs += subject.coef;
+      }
     });
-    clone[index].exam = 10;
-    clone[index].TP = 10;
-    clone[index].TD = 10;
- 
-   
-    console.log(state)
-    props.updateListedSubjects(clone);
+    return coefs != 0 ? parseFloat(sum / coefs).toFixed(2) : 0;
   };
-  const handelUndoChanges = () => {
-    let  clone = [...props.selectedListedSubjects];
-clone.map(subject=>{
- if (subject.name === state.name ){
-  subject.exam = subject.exam-state.addedValueExam
-  subject.tp = subject.exam-state.addedValueTP
-  subject.td = subject.exam-state.addedValueTD
-  
-  props.updateListedSubjects(clone); 
- }
-})
+  const calculateSubjectAverage = (subjects) => {
+    let avg = 0;
+    subjects.map((subject) => {
+      if (subject.name == teacherSubject) {
+        avg = parseFloat(
+          subject.TD * subject.coefTD +
+            subject.TP * subject.coefTP +
+            subject.exam * subject.coefExam
+        ).toFixed(2);
+        subject.avg = avg;
+      }
+    });
+    return avg;
   };
-  const getSubjects = () => {
-    axios
-      .post(
-        "http://localhost:4000/get-subjects",
-        {
-          selectedClass: props.selectedClass,
-          student_id: props.student._id,
-        },
-        { headers: { "Content-Type": "application/json" } }
-      )
-      .then((res) => {
-        let listedSubjectes = [...res.data];
-        props.updateSubjects(listedSubjectes);
-        // console.log(listedSubjectes);
+
+  const calculateCurrentStudentAverage = () => {
+    let clone = [...currentStudents];
+    let cloneUnderAvg = [];
+    clone = clone.map((student) => {
+      const subjects = student.subjects;
+      const avg = calculateAverage(subjects);
+      const subjectavg = calculateSubjectAverage(subjects);
+      student.avg = avg;
+      if (avg < 10 && subjectavg < 10) {
+        cloneUnderAvg.push(student);
+      }
+      return student;
+    });
+    setUnderAvgStudet(cloneUnderAvg);
+    setCurrentStudents(clone);
+  };
+
+  useEffect(() => {
+    calculateCurrentStudentAverage();
+  }, [currentStudents]);
+
+  const handelSearch = () => {
+    axios.get("http://localhost:4000/get-student").then((res) => {
+      const output = [];
+      res.data.map((obj) => {
+        output.push(obj._doc);
       });
+      setData(output);
+    });
+
+    let listedStudents = [];
+    data.map((student) => {
+      const output = student.classes.some(
+        (cls) => cls.year === promo && cls.semastre === semester
+      );
+      if (output) listedStudents.push(student);
+    });
+    setCurrentStudents(listedStudents);
   };
-  const handleSelectClass = (data) => {
-    props.updateClass(data);
-    getSubjects();
+  const handelRechat = (student) => {
+    console.log(student)
+    console.log(addedValue)
+    
   };
-  const listYears = () => {
-    const chips = [];
-    const classes = props.student.classes;
-    if (classes != null) {
-      classes.map((tmpClass) => {
-        chips.push(
-          <Chip
-            key={tmpClass._id}
-            variant="outlined"
-            color="primary"
-            avatar={<Avatar>F</Avatar>}
-            label={tmpClass.year + "  |  " + tmpClass.semastre}
-            onClick={() => {
-              handleSelectClass(tmpClass);
-            }}
-          />
-        );
-      });
-    }
-    return chips;
-  };
-  const chips = listYears();
 
   return (
     <div>
-       <AppBar position="absolute" color="default" className={classes.appBar}>
-        <Toolbar>
-          <Typography variant="h6" color="inherit" noWrap>
-           Teacher Dashboard 
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Grid container spacing={1}>
-        <Grid item xs={3}>
-          < SideMenu />
-        </Grid>
-        <Grid item xs={12}>
-              <Paper className={classes.ContentPage}>
-                {chips}
-                <Box component="div" whiteSpace="nowrap">
-                  .
-                </Box>
-                <Alert severity={state.severity} className={classes.Alert}>
-        {state.Msg}
-        <Button
-          variant="outlined"
-          size="small"
-          color="secondary"
-          style={{ visibility: state.visibility }}
-          className={classes.nobutton}
-          onClick={handelUndoChanges}
-        >
-          Undo
-        </Button>
-      </Alert>
-      .
+      < UiAppBar />
+
       <main className={classes.layout}>
         <Paper className={classes.paper}>
+          <Grid
+            container
+            direction="row"
+            rowSpacing={1}
+            justifyContent="space-around"
+          >
+            <Grid item xs={3}>
+              <Autocomplete
+                id="combo-box-demo"
+                options={Promo}
+                getOptionLabel={(option) => option.classYear}
+                style={{ width: 200 }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Current promo "
+                    variant="outlined"
+                    name="Promo"
+                    value={promo}
+                    onSelect={(e) => {
+                      setPromo(e.target.value);
+                    }}
+                  />
+                )}
+              />
+            </Grid>
 
-      <TableContainer component={Paper}>
-        <Table className={classes.table} aria-label="Marks table">
-          <TableHead>
-            <TableRow>
-              <StyledTableCell>code</StyledTableCell>
-              <StyledTableCell align="right">Family Name</StyledTableCell>
-              <StyledTableCell align="right">Name</StyledTableCell>
-              <StyledTableCell align="right">Note EXAM</StyledTableCell>
-              <StyledTableCell align="right">Note TD</StyledTableCell>
-              <StyledTableCell align="right">Note TP</StyledTableCell>
-              <StyledTableCell align="right">Subject Avg</StyledTableCell>
-              <StyledTableCell align="right">Added Mark </StyledTableCell>
-              <StyledTableCell align="right">Validation </StyledTableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {props.selectedListedSubjects.map((subject, index) => (
-              <StyledTableRow key={subject.name}>
-                <StyledTableCell align="right">{index}</StyledTableCell>
-                
-                <StyledTableCell align="right">
-                  <FormControl className={classes.margin}>
-                    <CustomInput
-                      defaultValue={subject.exam}
+            <Grid item xs={3}>
+              <Autocomplete
+                id="combo-box-demo"
+                options={Semasters}
+                getOptionLabel={(option) => option.Semastername}
+                style={{ width: 200 }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Semastre"
+                    variant="outlined"
+                    name="Semaster"
+                    value={semester}
+                    onSelect={(e) => {
+                      setSemester(e.target.value);
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={3}>
+              <TextField
+                id="outlined-basic"
+                label="Teacher Subject"
+                variant="outlined"
+                onChange={(e) => {
+                  setTeacherSubject(e.target.value);
+                }}
+              />
+            </Grid>
+            <Grid
+              container
+              item
+              xs={3}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                onClick={handelSearch}
+              >
+                Search
+              </Button>
+            </Grid>
+          </Grid>
+          .
+          <TableContainer component={Paper}>
+            <Table className={classes.table} aria-label="Marks table" >
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>code</StyledTableCell>
+                  <StyledTableCell align="right">Family Name</StyledTableCell>
+                  <StyledTableCell align="right">Name</StyledTableCell>
+                  <StyledTableCell align="right">Note EXAM</StyledTableCell>
+                  <StyledTableCell align="right">Note TD</StyledTableCell>
+                  <StyledTableCell align="right">Note TP</StyledTableCell>
+                  <StyledTableCell align="right">Subject Avg</StyledTableCell>
+                  <StyledTableCell align="right">Added Mark </StyledTableCell>
+                  <StyledTableCell align="right">Validation </StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {underAvgStudet.map((student, index) => (
+                  <StyledTableRow key={student.name}>
+                    <StyledTableCell align="right">{index}</StyledTableCell>
+                    <StyledTableCell align="right">
+                      {student.familyName}
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {" "}
+                      {student.name}{" "}
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      <FormControl className={classes.margin}>
+                      <CustomInput
+                      defaultValue= {student.subjects[index].exam}
                       name="exam"
                       onChange={(e) => changeExam(e, index)}
                     />
-                  </FormControl>
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  {subject.coefExam}
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  <FormControl className={classes.margin}>
-                    <CustomInput
-                      defaultValue={subject.TD}
+                       
+                      </FormControl>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      <FormControl className={classes.margin}>
+                      <CustomInput
+                      defaultValue={student.subjects[index].TD}
                       name="TD"
                       onChange={(e) => changeTD(e, index)}
                     />
-                  </FormControl>
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  {subject.coefTD}
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  <FormControl className={classes.margin}>
-                    <CustomInput
-                      defaultValue={subject.TP}
+                      
+                      </FormControl>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      <FormControl className={classes.margin}>
+                      <CustomInput
+                      defaultValue= {student.subjects[index].TP}
                       name="TP"
                       onChange={(e) => changeTP(e, index)}
                     />
-                  </FormControl>
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  {subject.coefTP}
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  {calculateSubjectAverage(subject)}
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  {subject.credit}
-                </StyledTableCell>
-                <StyledTableCell align="right">{subject.coef}</StyledTableCell>
-                <StyledTableCell align="right">
-                  {calculateAverage() >= 10 ? (
-                    <CheckCircleTwoToneIcon className={classes.icon} />
-                  ) : calculateSubjectAverage(subject) < 10 ? (
+                       
+                      </FormControl>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      <FormControl className={classes.margin}>
+                    
+                        {" "}
+                        {parseFloat(
+                          student.subjects[index].TD *
+                            student.subjects[index].coefTD +
+                            student.subjects[index].TP *
+                              student.subjects[index].coefTP +
+                            student.subjects[index].exam *
+                              student.subjects[index].coefExam
+                        ).toFixed(2)}{" "}
+                      </FormControl>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                    <CustomInput
+                      defaultValue= {addedValue}
+                      name="AddedValue"
+                      onChange={(e)=>setAddedValue(e.target.value)}
+                    />
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                    { (parseFloat(
+                          student.subjects[index].TD *
+                            student.subjects[index].coefTD +
+                            student.subjects[index].TP *
+                              student.subjects[index].coefTP +
+                            student.subjects[index].exam *
+                              student.subjects[index].coefExam
+                        ).toFixed(2))< 10 ? (
                     <>
                       <Button
                         className={classes.button}
                         variant="outlined"
                         size="small"
                         color="primary"
-                        onClick={() => handelRechat(index)}
+                        onClick={() => handelRechat(student)}
                       >
                         Yes
                       </Button>
@@ -432,35 +431,23 @@ clone.map(subject=>{
                   ) : (
                     <CheckCircleTwoToneIcon className={classes.icon} />
                   )}
-                </StyledTableCell>
-              </StyledTableRow>
-            ))}
-            <StyledTableRow>
-              <StyledTableCell align="center" colSpan={5}>
-                Average mark: {calculateAverage() + "/20"}
-              </StyledTableCell>
-              <StyledTableCell align="center" colSpan={5}>
-                Credit: {calculateCredit() + "/30"}
-              </StyledTableCell>
-              <StyledTableCell align="left" colSpan={2}>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={handleUpdate}
-                >
-                  Update
-                </Button>
-              </StyledTableCell>
-            </StyledTableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
+                    </StyledTableCell>
+                  </StyledTableRow>
+                ))}
+                <StyledTableRow>
+                  <StyledTableCell align="center" colSpan={4}></StyledTableCell>
+                  <StyledTableCell align="center" colSpan={4}></StyledTableCell>
+                  <StyledTableCell align="left" colSpan={4}>
+                    <Button variant="outlined" color="primary">
+                      Update
+                    </Button>
+                  </StyledTableCell>
+                </StyledTableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Paper>
-        </main>
-                
-              </Paper>
-            </Grid>
-        </Grid> 
+      </main>
     </div>
   );
 }
