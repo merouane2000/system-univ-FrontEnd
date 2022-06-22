@@ -21,7 +21,6 @@ function App() {
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/teacher/dashboard" element={< TeacherDashboad />} />
         <Route path="/teacher/tabel" element={< TeacherTabel />} />
-        
         <Route path="/get-results" element={<StudentsResults />} />
       </Routes>
     </Router>
