@@ -115,7 +115,7 @@ function MarksTable(props) {
     let clone = [...props.selectedListedSubjects];
     clone[index].exam = e.target.value;
     props.updateListedSubjects(clone);
-    console.log(e.target.value);
+    console.log(props.selectedListedSubjects);
   };
 
   const handleUpdate = () => {
