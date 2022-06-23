@@ -3,7 +3,9 @@ const initState = {
     selectedStudent:{},
     selectedClass:{},
     listedSubjects: [],
-    rachatAVG:0
+    rachatAVG:0,
+    underAvgStudents: [],
+    
    
 }
 const reducer = (state = initState, action) => {
@@ -27,6 +29,10 @@ const reducer = (state = initState, action) => {
         case "UPDATE_RACHAT_AVG":
             return { ...state,
                 rachatAVG: action.payload
+            };
+        case "UPDATE_UNDER_AVG_STUDENTS":
+            return { ...state,
+                underAvgStudents: action.payload
             };
         default:
             return state
