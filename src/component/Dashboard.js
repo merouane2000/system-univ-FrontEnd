@@ -77,6 +77,7 @@ const Dashboard = (props) => {
   const handleSelectClass = (data) => {
     props.updateClass(data);
     getSubjects();
+    console.log(props.student)
   };
   const listYears = () => {
     const chips = [];
