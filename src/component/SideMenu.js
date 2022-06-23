@@ -42,6 +42,7 @@ const SideMenu = (props) => {
 
   const handleSelectStudent = student => {
     props.updateStudent(student);
+    console.log(props.students)
   }
 
   const studentsList = () => {
