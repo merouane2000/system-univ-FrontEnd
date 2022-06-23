@@ -15,10 +15,11 @@ import FormControl from "@material-ui/core/FormControl";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { TextField } from "@material-ui/core";
 import CheckCircleTwoToneIcon from "@material-ui/icons/CheckCircleTwoTone";
-
 import Grid from "@material-ui/core/Grid";
 import UiAppBar from "../component/UiAppBar";
-
+import InputAdornment from "@material-ui/core/InputAdornment";
+import AddIcon from "@material-ui/icons/Add";
+import RemoveIcon from "@material-ui/icons/Remove";
 const StyledTableCell = withStyles((theme) => ({
   head: {
     backgroundColor: theme.palette.common.black,
@@ -153,78 +154,22 @@ function TeacherTabel(props) {
   const [currentStudents, setCurrentStudents] = useState([]);
   const [underAvgStudet, setUnderAvgStudet] = useState([]);
   const [teacherSubject, setTeacherSubject] = useState("");
-  const [addedValue , setAddedValue]=useState()
+  const [addedValue, setAddedValue] = useState();
 
   const changeTD = (e, index) => {
-    let clone = [...props.selectedListedSubjects];
-    clone[index].TD = e.target.value;
-    props.updateListedSubjects(clone);
+    let clone = index;
+    clone.TD = e.target.value;
   };
 
   const changeTP = (e, index) => {
-    let clone = [...props.selectedListedSubjects];
-    clone[index].TP = e.target.value;
-    props.updateListedSubjects(clone);
-    console.log(e.target.value);
+    let clone = index;
+    clone.TP = e.target.value;
   };
 
   const changeExam = (e, index) => {
-    let clone = [...props.selectedListedSubjects];
-    clone[index].exam = e.target.value;
-    props.updateListedSubjects(clone);
-    console.log(e.target.value);
+    let clone = index;
+    clone.exam = e.target.value;
   };
-
-  const calculateAverage = (subjects) => {
-    let sum = 0;
-    let coefs = 0;
-    subjects.map((subject) => {
-      if (subject.semester === semester && subject.year === promo) {
-        let local =
-          subject.TD * subject.coefTD +
-          subject.TP * subject.coefTP +
-          subject.exam * subject.coefExam;
-        sum += local * subject.coef;
-        coefs += subject.coef;
-      }
-    });
-    return coefs != 0 ? parseFloat(sum / coefs).toFixed(2) : 0;
-  };
-  const calculateSubjectAverage = (subjects) => {
-    let avg = 0;
-    subjects.map((subject) => {
-      if (subject.name == teacherSubject) {
-        avg = parseFloat(
-          subject.TD * subject.coefTD +
-            subject.TP * subject.coefTP +
-            subject.exam * subject.coefExam
-        ).toFixed(2);
-        subject.avg = avg;
-      }
-    });
-    return avg;
-  };
-
-  const calculateCurrentStudentAverage = () => {
-    let clone = [...currentStudents];
-    let cloneUnderAvg = [];
-    clone = clone.map((student) => {
-      const subjects = student.subjects;
-      const avg = calculateAverage(subjects);
-      const subjectavg = calculateSubjectAverage(subjects);
-      student.avg = avg;
-      if (avg < 10 && subjectavg < 10) {
-        cloneUnderAvg.push(student);
-      }
-      return student;
-    });
-    setUnderAvgStudet(cloneUnderAvg);
-    setCurrentStudents(clone);
-  };
-
-  useEffect(() => {
-    calculateCurrentStudentAverage();
-  }, [currentStudents]);
 
   const handelSearch = () => {
     axios.get("http://localhost:4000/get-student").then((res) => {
@@ -244,15 +189,76 @@ function TeacherTabel(props) {
     });
     setCurrentStudents(listedStudents);
   };
+
+  const calculateCurrentStudentAverage = () => {
+    let clone = [...currentStudents];
+    let cloneUnderAvg = [];
+    clone = clone.map((student) => {
+      const subjects = student.subjects;
+      const avg = calculateAverage(subjects);
+      const subjectavg = calculateSubjectAverage(subjects);
+      student.avg = avg;
+      if (avg < 10 && subjectavg < 10) {
+        cloneUnderAvg.push(student);
+      }
+      return student;
+    });
+    setUnderAvgStudet(cloneUnderAvg);
+    props.updateuUnderAvgStudents(cloneUnderAvg);
+    setCurrentStudents(clone);
+  };
+
+  const calculateAverage = (subjects) => {
+    let sum = 0;
+    let coefs = 0;
+    subjects.map((subject) => {
+      if (subject.semester === semester && subject.year === promo) {
+        let local =
+          subject.TD * subject.coefTD +
+          subject.TP * subject.coefTP +
+          subject.exam * subject.coefExam;
+        sum += local * subject.coef;
+        coefs += subject.coef;
+      }
+    });
+    return coefs != 0 ? parseFloat(sum / coefs).toFixed(2) : 0;
+  };
+  const calculateSubjectAverage = (subjects) => {
+    let avg = 0;
+    props.selectedListedSubjects.map((subject) => {
+      if (subject.name == teacherSubject) {
+        avg = parseFloat(
+          subject.TD * subject.coefTD +
+            subject.TP * subject.coefTP +
+            subject.exam * subject.coefExam
+        ).toFixed(2);
+        subject.avg = avg;
+      }
+    });
+    return avg;
+  };
+  const calculateSelectedSubjectAverage = (subject) => {
+    let avg = 0;
+    return (avg = parseFloat(
+      subject.TD * subject.coefTD +
+        subject.TP * subject.coefTP +
+        subject.exam * subject.coefExam
+    ).toFixed(2));
+  };
+
+  useEffect(() => {
+    calculateCurrentStudentAverage();
+  }, [currentStudents]);
+
   const handelRechat = (student) => {
-    console.log(student)
-    console.log(addedValue)
-    
+    console.log(student);
+    console.log(addedValue);
+    console.log(props.underAvgStudet);
   };
 
   return (
     <div>
-      < UiAppBar />
+      <UiAppBar />
 
       <main className={classes.layout}>
         <Paper className={classes.paper}>
@@ -332,7 +338,7 @@ function TeacherTabel(props) {
           </Grid>
           .
           <TableContainer component={Paper}>
-            <Table className={classes.table} aria-label="Marks table" >
+            <Table className={classes.table} aria-label="Marks table">
               <TableHead>
                 <TableRow>
                   <StyledTableCell>code</StyledTableCell>
@@ -343,11 +349,12 @@ function TeacherTabel(props) {
                   <StyledTableCell align="right">Note TP</StyledTableCell>
                   <StyledTableCell align="right">Subject Avg</StyledTableCell>
                   <StyledTableCell align="right">Added Mark </StyledTableCell>
+                  <StyledTableCell align="right">Rachat suggestion </StyledTableCell>
                   <StyledTableCell align="right">Validation </StyledTableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {underAvgStudet.map((student, index) => (
+                {props.underAvgStudet.map((student, index) => (
                   <StyledTableRow key={student.name}>
                     <StyledTableCell align="right">{index}</StyledTableCell>
                     <StyledTableCell align="right">
@@ -359,78 +366,90 @@ function TeacherTabel(props) {
                     </StyledTableCell>
                     <StyledTableCell align="right">
                       <FormControl className={classes.margin}>
-                      <CustomInput
-                      defaultValue= {student.subjects[index].exam}
-                      name="exam"
-                      onChange={(e) => changeExam(e, index)}
-                    />
-                       
+                        <CustomInput
+                          defaultValue={student.subjects[index].exam}
+                          name="exam"
+                          onChange={(e) =>
+                            changeExam(e, student.subjects[index])
+                          }
+                        />
                       </FormControl>
                     </StyledTableCell>
                     <StyledTableCell align="right">
                       <FormControl className={classes.margin}>
-                      <CustomInput
-                      defaultValue={student.subjects[index].TD}
-                      name="TD"
-                      onChange={(e) => changeTD(e, index)}
-                    />
-                      
+                        <CustomInput
+                          defaultValue={student.subjects[index].TD}
+                          name="TD"
+                          onChange={(e) => changeTD(e, student.subjects[index])}
+                        />
                       </FormControl>
                     </StyledTableCell>
                     <StyledTableCell align="right">
                       <FormControl className={classes.margin}>
-                      <CustomInput
-                      defaultValue= {student.subjects[index].TP}
-                      name="TP"
-                      onChange={(e) => changeTP(e, index)}
-                    />
-                       
+                        <CustomInput
+                          defaultValue={student.subjects[index].TP}
+                          name="TP"
+                          onChange={(e) => changeTP(e, student.subjects[index])}
+                        />
                       </FormControl>
                     </StyledTableCell>
                     <StyledTableCell align="right">
                       <FormControl className={classes.margin}>
-                    
-                        {" "}
-                        {parseFloat(
-                          student.subjects[index].TD *
-                            student.subjects[index].coefTD +
-                            student.subjects[index].TP *
-                              student.subjects[index].coefTP +
-                            student.subjects[index].exam *
-                              student.subjects[index].coefExam
-                        ).toFixed(2)}{" "}
+                        {calculateSelectedSubjectAverage(
+                          student.subjects[index]
+                        )}
                       </FormControl>
                     </StyledTableCell>
                     <StyledTableCell align="right">
-                    <CustomInput
-                      defaultValue= {addedValue}
-                      name="AddedValue"
-                      onChange={(e)=>setAddedValue(e.target.value)}
-                    />
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                    { (parseFloat(
-                          student.subjects[index].TD *
-                            student.subjects[index].coefTD +
-                            student.subjects[index].TP *
-                              student.subjects[index].coefTP +
-                            student.subjects[index].exam *
-                              student.subjects[index].coefExam
-                        ).toFixed(2))< 10 ? (
-                    <>
-                      <Button
-                        className={classes.button}
+                      <CustomInput
+                        style={{}}
+                        id="outlined-basic"
+                        type="number"
                         variant="outlined"
-                        size="small"
-                        color="primary"
-                        onClick={() => handelRechat(student)}
-                      >
-                        Yes
-                      </Button>
-                    </>
-                  ) : (
-                    <CheckCircleTwoToneIcon className={classes.icon} />
-                  )}
+                        defaultValue={addedValue}
+                        name="AddedValue"
+                        onChange={(e)=>setAddedValue(e.target.value)}
+                      />
+                      
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      <CustomInput
+                        id="outlined-basic"
+                        type="number"
+                        variant="outlined"
+                        defaultValue={addedValue}
+                        name="AddedValue"
+                        onChange={(e)=>setAddedValue(e.target.value)}
+                      />
+                      
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                       {calculateSelectedSubjectAverage(
+                          student.subjects[index]
+                        ) ? (
+                        <>
+                          <Button
+                            className={classes.button}
+                            variant="outlined"
+                            size="small"
+                            color="primary"
+                            onClick={() => handelRechat(student)}
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            className={classes.button}
+                            variant="outlined"
+                            size="small"
+                            color="secondary"
+                            onClick={() => handelRechat(student)}
+                          >
+                            No
+                          </Button>
+                        </>
+                      ) : (
+                        <CheckCircleTwoToneIcon className={classes.icon} />
+                      )}
                     </StyledTableCell>
                   </StyledTableRow>
                 ))}
@@ -462,6 +481,9 @@ const mapDispatchToProps = (dispatch) => {
     updateListedSubjects: (data) => {
       dispatch({ type: "UPDATE_LISTED_SUBJECTS", payload: data });
     },
+    updateuUnderAvgStudents: (data) => {
+      dispatch({ type: "UPDATE_UNDER_AVG_STUDENTS", payload: data });
+    },
   };
 };
 
@@ -471,6 +493,7 @@ const mapStateToProps = (state) => {
     student: state.selectedStudent,
     selectedClass: state.selectedClass,
     selectedListedSubjects: state.listedSubjects,
+    underAvgStudet: state.underAvgStudents,
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(TeacherTabel);
