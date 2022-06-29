@@ -14,12 +14,8 @@ import { connect } from "react-redux";
 import FormControl from "@material-ui/core/FormControl";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { TextField } from "@material-ui/core";
-import CheckCircleTwoToneIcon from "@material-ui/icons/CheckCircleTwoTone";
 import Grid from "@material-ui/core/Grid";
 import UiAppBar from "../component/UiAppBar";
-import InputAdornment from "@material-ui/core/InputAdornment";
-import AddIcon from "@material-ui/icons/Add";
-import RemoveIcon from "@material-ui/icons/Remove";
 const StyledTableCell = withStyles((theme) => ({
   head: {
     backgroundColor: theme.palette.common.black,
@@ -93,6 +89,7 @@ const CustomInput = withStyles((theme) => ({
     },
   },
   input: {
+    minWidth: 50,
     borderRadius: 4,
     position: "relative",
     backgroundColor: theme.palette.common.white,
@@ -148,13 +145,12 @@ const Semasters = [
 
 function TeacherTabel(props) {
   const classes = useStyles();
-  const [data, setData] = useState([]);
   const [semester, setSemester] = useState("");
   const [promo, setPromo] = useState("");
-  const [currentStudents, setCurrentStudents] = useState([]);
-  const [underAvgStudet, setUnderAvgStudet] = useState([]);
+  const [underAvg, setUnderavg] = useState([]);
   const [teacherSubject, setTeacherSubject] = useState("");
-  const [addedValue, setAddedValue] = useState();
+  const [addedValue, setAddedValue] = useState(0);
+  const [disabled, setDisable] = useState(false);
 
   const changeTD = (e, index) => {
     let clone = index;
@@ -169,43 +165,6 @@ function TeacherTabel(props) {
   const changeExam = (e, index) => {
     let clone = index;
     clone.exam = e.target.value;
-  };
-
-  const handelSearch = () => {
-    axios.get("http://localhost:4000/get-student").then((res) => {
-      const output = [];
-      res.data.map((obj) => {
-        output.push(obj._doc);
-      });
-      setData(output);
-    });
-
-    let listedStudents = [];
-    data.map((student) => {
-      const output = student.classes.some(
-        (cls) => cls.year === promo && cls.semastre === semester
-      );
-      if (output) listedStudents.push(student);
-    });
-    setCurrentStudents(listedStudents);
-  };
-
-  const calculateCurrentStudentAverage = () => {
-    let clone = [...currentStudents];
-    let cloneUnderAvg = [];
-    clone = clone.map((student) => {
-      const subjects = student.subjects;
-      const avg = calculateAverage(subjects);
-      const subjectavg = calculateSubjectAverage(subjects);
-      student.avg = avg;
-      if (avg < 10 && subjectavg < 10) {
-        cloneUnderAvg.push(student);
-      }
-      return student;
-    });
-    setUnderAvgStudet(cloneUnderAvg);
-    props.updateuUnderAvgStudents(cloneUnderAvg);
-    setCurrentStudents(clone);
   };
 
   const calculateAverage = (subjects) => {
@@ -223,9 +182,9 @@ function TeacherTabel(props) {
     });
     return coefs != 0 ? parseFloat(sum / coefs).toFixed(2) : 0;
   };
-  const calculateSubjectAverage = (subjects) => {
+  const selectSubjectUnderAverage = (subjects) => {
     let avg = 0;
-    props.selectedListedSubjects.map((subject) => {
+    subjects.map((subject) => {
       if (subject.name == teacherSubject) {
         avg = parseFloat(
           subject.TD * subject.coefTD +
@@ -247,14 +206,90 @@ function TeacherTabel(props) {
   };
 
   useEffect(() => {
-    calculateCurrentStudentAverage();
-  }, [currentStudents]);
+    console.log(props.rachatavg);
+  }, []);
 
-  const handelRechat = (student) => {
-    console.log(student);
-    console.log(addedValue);
-    console.log(props.underAvgStudet);
+  const handelSearch = async () => {
+    console.log("handelSearch clicked");
+
+    await axios.get("http://localhost:4000/get-student").then((res) => {
+      const output = [];
+      res.data.map((obj) => {
+        output.push(obj._doc);
+      });
+      let cloneUnderAvg = [];
+      console.log(output);
+      output.map((student) => {
+        const isSelcted = student.classes.some(
+          (cls) => cls.year === promo && cls.semastre === semester
+        );
+        if (isSelcted) {
+          const avg = calculateAverage(student.subjects);
+          const subjectavg = selectSubjectUnderAverage(student.subjects);
+          student.avg = avg;
+          if (
+            avg < 10 &&
+            subjectavg < 10 &&
+            avg >= parseFloat(props.rachatavg)
+          ) {
+            cloneUnderAvg.push(student);
+          }
+          setUnderavg(cloneUnderAvg);
+        }
+        console.log("handelSearch end");
+      });
+    });
   };
+
+  const handelRechatAccepted = async (subject) => {
+    let clone = [...underAvg];
+    clone.map((student) => {
+      if (student._id == subject.student_id) {
+        student.subjects.find(
+          (subject) => subject.name === teacherSubject
+        ).exam = subject.exam + parseFloat(addedValue);
+      }
+    });
+    setUnderavg(clone);
+    calculateAverage(
+      underAvg.find((student) => student._id == subject.student_id).subjects
+    );
+
+    await axios
+      .post(
+        "http://localhost:4000/student",
+        {
+          values: underAvg.find((student) => student._id == subject.student_id),
+        },
+        { headers: { "Content-Type": "application/json" } }
+      )
+      .then((res) => {
+        console.log("sayi");
+      })
+      .catch((error) => {
+        console.log(error.data);
+      });
+  };
+
+  const proposeRachat = (subject) => {
+    let rachat = 0;
+    rachat = parseFloat(
+      10 - (subject.TD * subject.coefTD + subject.TP * subject.coefTP) / 0.6
+    ).toFixed(2);
+
+    return rachat;
+  };
+  const handelRechatDecline=(index)=>{
+    console.log(index)
+    let clone = [...underAvg];
+    clone.map((indexUnder) =>{
+  if(index.name === indexUnder.name){
+  setDisable(true)
+      }
+    }
+    
+      )}
+
 
   return (
     <div>
@@ -330,7 +365,7 @@ function TeacherTabel(props) {
                 type="submit"
                 variant="contained"
                 color="primary"
-                onClick={handelSearch}
+                onClick={() => handelSearch()}
               >
                 Search
               </Button>
@@ -347,121 +382,164 @@ function TeacherTabel(props) {
                   <StyledTableCell align="right">Note EXAM</StyledTableCell>
                   <StyledTableCell align="right">Note TD</StyledTableCell>
                   <StyledTableCell align="right">Note TP</StyledTableCell>
-                  <StyledTableCell align="right">Subject Avg</StyledTableCell>
                   <StyledTableCell align="right">Added Mark </StyledTableCell>
-                  <StyledTableCell align="right">Rachat suggestion </StyledTableCell>
+                  <StyledTableCell align="right">
+                    Rachat Suggestion
+                  </StyledTableCell>
+                  <StyledTableCell align="right">Subject Avg</StyledTableCell>
                   <StyledTableCell align="right">Validation </StyledTableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {props.underAvgStudet.map((student, index) => (
-                  <StyledTableRow key={student.name}>
-                    <StyledTableCell align="right">{index}</StyledTableCell>
-                    <StyledTableCell align="right">
-                      {student.familyName}
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {" "}
-                      {student.name}{" "}
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      <FormControl className={classes.margin}>
-                        <CustomInput
-                          defaultValue={student.subjects[index].exam}
-                          name="exam"
-                          onChange={(e) =>
-                            changeExam(e, student.subjects[index])
-                          }
-                        />
-                      </FormControl>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      <FormControl className={classes.margin}>
-                        <CustomInput
-                          defaultValue={student.subjects[index].TD}
-                          name="TD"
-                          onChange={(e) => changeTD(e, student.subjects[index])}
-                        />
-                      </FormControl>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      <FormControl className={classes.margin}>
-                        <CustomInput
-                          defaultValue={student.subjects[index].TP}
-                          name="TP"
-                          onChange={(e) => changeTP(e, student.subjects[index])}
-                        />
-                      </FormControl>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      <FormControl className={classes.margin}>
-                        {calculateSelectedSubjectAverage(
-                          student.subjects[index]
-                        )}
-                      </FormControl>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      <CustomInput
-                        style={{}}
-                        id="outlined-basic"
-                        type="number"
-                        variant="outlined"
-                        defaultValue={addedValue}
-                        name="AddedValue"
-                        onChange={(e)=>setAddedValue(e.target.value)}
-                      />
-                      
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      <CustomInput
-                        id="outlined-basic"
-                        type="number"
-                        variant="outlined"
-                        defaultValue={addedValue}
-                        name="AddedValue"
-                        onChange={(e)=>setAddedValue(e.target.value)}
-                      />
-                      
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                       {calculateSelectedSubjectAverage(
-                          student.subjects[index]
-                        ) ? (
-                        <>
+                {underAvg === null && typeof underAvg === typeof undefined
+                  ? console.log("empty")
+                  : underAvg.map((student, index) => (
+                      <StyledTableRow key={student.name}>
+                        <StyledTableCell align="right">{index}</StyledTableCell>
+                        <StyledTableCell align="right">
+                          {student.familyName}
+                        </StyledTableCell>
+                        <StyledTableCell align="right">
+                          {" "}
+                          {student.name}{" "}
+                        </StyledTableCell>
+                        <StyledTableCell align="right">
+                          <FormControl className={classes.margin}>
+                            <CustomInput
+                              defaultValue={
+                                student.subjects.find(
+                                  (subject) => subject.name === teacherSubject
+                                ).exam
+                              }
+                              name="exam"
+                              onChange={(e) =>
+                                changeExam(
+                                  e,
+                                  student.subjects.find(
+                                    (subject) => subject.name === teacherSubject
+                                  )
+                                )
+                              }
+                            />
+                          </FormControl>
+                        </StyledTableCell>
+                        <StyledTableCell align="right">
+                          <FormControl className={classes.margin}>
+                            <CustomInput
+                              defaultValue={
+                                student.subjects.find(
+                                  (subject) => subject.name === teacherSubject
+                                ).TD
+                              }
+                              name="TD"
+                              onChange={(e) =>
+                                changeTD(
+                                  e,
+                                  student.subjects.find(
+                                    (subject) => subject.name === teacherSubject
+                                  )
+                                )
+                              }
+                            />
+                          </FormControl>
+                        </StyledTableCell>
+                        <StyledTableCell align="right">
+                          <FormControl className={classes.margin}>
+                            <CustomInput
+                              defaultValue={
+                                student.subjects.find(
+                                  (subject) => subject.name === teacherSubject
+                                ).TP
+                              }
+                              name="TP"
+                              onChange={(e) =>
+                                changeTP(
+                                  e,
+                                  student.subjects.find(
+                                    (subject) => subject.name === teacherSubject
+                                  )
+                                )
+                              }
+                            />
+                          </FormControl>
+                        </StyledTableCell>
+                        <StyledTableCell align="right">
+                          <CustomInput
+                            type="number"
+                            disabled={
+                              calculateSelectedSubjectAverage(
+                                student.subjects.find(
+                                  (subject) => subject.name === teacherSubject
+                                )
+                              ) >= 10
+                            }
+                            defaultValue={0}
+                            onChange={(e) => setAddedValue(e.target.value)}
+                          />
+                        </StyledTableCell>
+
+                        <StyledTableCell
+                          align="right"
+                          style={{ color: "green" }}
+                        >
+                          <FormControl className={classes.margin}>
+                            +{" "}
+                            {proposeRachat(
+                              student.subjects.find(
+                                (subject) => subject.name === teacherSubject
+                              )
+                            )}
+                          </FormControl>
+                        </StyledTableCell>
+                        <StyledTableCell align="right">
+                          <FormControl className={classes.margin}>
+                            {calculateSelectedSubjectAverage(
+                              student.subjects.find(
+                                (subject) => subject.name === teacherSubject
+                              )
+                            )}
+                          </FormControl>
+                        </StyledTableCell>
+
+                        <StyledTableCell align="right">
                           <Button
                             className={classes.button}
                             variant="outlined"
                             size="small"
                             color="primary"
-                            onClick={() => handelRechat(student)}
+                            disabled={
+                              calculateSelectedSubjectAverage(
+                                student.subjects.find(
+                                  (subject) => subject.name === teacherSubject
+                                )
+                              ) >= 10
+                            }
+                            id={index}
+                            onClick={() =>
+                              handelRechatAccepted(
+                                student.subjects.find(
+                                  (subject) => subject.name === teacherSubject
+                                )
+                              )
+                            }
                           >
-                            Yes
+                            Accept
                           </Button>
                           <Button
                             className={classes.button}
                             variant="outlined"
                             size="small"
                             color="secondary"
-                            onClick={() => handelRechat(student)}
+                            disabled={disabled}
+                            id={index}
+                            onClick={()=>handelRechatDecline(student)}
                           >
-                            No
+                            Decline
                           </Button>
-                        </>
-                      ) : (
-                        <CheckCircleTwoToneIcon className={classes.icon} />
-                      )}
-                    </StyledTableCell>
-                  </StyledTableRow>
-                ))}
-                <StyledTableRow>
-                  <StyledTableCell align="center" colSpan={4}></StyledTableCell>
-                  <StyledTableCell align="center" colSpan={4}></StyledTableCell>
-                  <StyledTableCell align="left" colSpan={4}>
-                    <Button variant="outlined" color="primary">
-                      Update
-                    </Button>
-                  </StyledTableCell>
-                </StyledTableRow>
+                        </StyledTableCell>
+                      </StyledTableRow>
+                    ))}
+                <StyledTableRow></StyledTableRow>
               </TableBody>
             </Table>
           </TableContainer>
@@ -481,9 +559,6 @@ const mapDispatchToProps = (dispatch) => {
     updateListedSubjects: (data) => {
       dispatch({ type: "UPDATE_LISTED_SUBJECTS", payload: data });
     },
-    updateuUnderAvgStudents: (data) => {
-      dispatch({ type: "UPDATE_UNDER_AVG_STUDENTS", payload: data });
-    },
   };
 };
 
@@ -493,7 +568,8 @@ const mapStateToProps = (state) => {
     student: state.selectedStudent,
     selectedClass: state.selectedClass,
     selectedListedSubjects: state.listedSubjects,
-    underAvgStudet: state.underAvgStudents,
+    rachatavg: state.rachatAVG,
   };
 };
+
 export default connect(mapStateToProps, mapDispatchToProps)(TeacherTabel);
