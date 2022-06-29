@@ -64,17 +64,11 @@ const InitialValues = {
   coefExam: 0.6,
 };
 
-const Semasters = [
-  { Semastername: "L1-S1" },
-  { Semastername: "L1-S2" },
-  { Semastername: "L2-S1" },
-  { Semastername: "L2-S2" },
-  { Semastername: "L3-S1" },
-  { Semastername: "L3-S2" },
-  { Semastername: "M1-S1" },
-  { Semastername: "M1-S2" },
-  { Semastername: "M2-S1" },
-  { Semastername: "M2-S2" },
+const Unites = [
+  { UniteName: "UE fondamentales" },
+  { UniteName: "UE méthodologie" },
+  { UniteName: "UE Decouverte " },
+  { UniteName: "UE transversale" },
 ];
 
 const SubjectForm = (props) => {
@@ -156,12 +150,27 @@ const SubjectForm = (props) => {
             justifyContent="center"
             alignItems="center"
           >
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <TextField
                 variant="outlined"
                 label="name"
                 name="name"
                 onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={6}>
+            <Autocomplete
+                id="combo-box-demo"
+                options={Unites}
+                getOptionLabel={(option) => option.UniteName}
+                style={{ width: 220 }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Subject Unite "
+                    variant="outlined"
+                  />
+                )}
               />
             </Grid>
             <Grid item xs={6}>
