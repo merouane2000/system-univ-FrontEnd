@@ -110,6 +110,10 @@ function StudentsResults(props) {
     });
     setCurrentStudents(listedStudents);
   };
+  useEffect(()=>{
+    console.log(props.rachatavg)
+  },[])
+
   const calculateCurrentStudentAverage = () => {
     let rachat = props.rachatavg
 
