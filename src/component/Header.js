@@ -56,6 +56,12 @@ function Header(props) {
               }}
               
             />
+      
+            <InputBase
+              placeholder="The RACHAT CREDIT"
+              className={classes.searchInput}
+              
+            />
             <Button type="submit" variant="contained" color="primary" onClick={handelSendRachatAVG}>
              Submit
             </Button>
