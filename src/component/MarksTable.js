@@ -354,7 +354,7 @@ clone.map(subject=>{
                 Average mark: {calculateAverage() + "/20"}
               </StyledTableCell>
               <StyledTableCell align="center" colSpan={5}>
-                Credit: {calculateCredit() + "/30"}
+                Credit: {calculateCredit() }
               </StyledTableCell>
               <StyledTableCell align="left" colSpan={2}>
                 <Button
