@@ -34,6 +34,7 @@ function Header(props) {
   const classes = useStyles();
   const navigate = useNavigate();
   const [state,setState] = useState()
+  sessionStorage.setItem('Rachat', state);
   
   const handelSendRachatAVG=()=>{
     let clone = props.rachatavg;
