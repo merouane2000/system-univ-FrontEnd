@@ -230,7 +230,7 @@ function TeacherTabel(props) {
           if (
             avg < 10 &&
             subjectavg < 10 &&
-            avg >= parseFloat(props.rachatavg)
+            avg >= parseFloat(rachat)
           ) {
             cloneUnderAvg.push(student);
           }
@@ -271,24 +271,29 @@ function TeacherTabel(props) {
       });
   };
 
+  const rachat = sessionStorage.getItem("Rachat")
+
   const proposeRachat = (subject) => {
     let rachat = 0;
-    rachat = parseFloat(
-      10 - (subject.TD * subject.coefTD + subject.TP * subject.coefTP) / 0.6
-    ).toFixed(2);
-
+      rachat = parseFloat(
+        10 - (subject.TD * subject.coefTD + subject.TP * subject.coefTP) / 0.6
+      ).toFixed(2);
     return rachat;
   };
-  const handelRechatDecline=(index)=>{
-    console.log(index)
+  const handelRechatDecline=(subject)=>{
+
     let clone = [...underAvg];
-    clone.map((indexUnder) =>{
-  if(index.name === indexUnder.name){
-  setDisable(true)
+    clone.map((student) => {
+      if (student._id == subject.student_id) {
+        student.subjects.find(
+          (subject) => subject.name === teacherSubject
+        ).exam = subject.exam - parseFloat(addedValue);
       }
-    }
-    
-      )}
+    });
+    setUnderavg(clone);
+    calculateAverage(
+      underAvg.find((student) => student._id == subject.student_id).subjects
+    );}
 
 
   return (
@@ -347,7 +352,7 @@ function TeacherTabel(props) {
             <Grid item xs={3}>
               <TextField
                 id="outlined-basic"
-                label="Teacher Subject"
+                label=" Secondary Teacher Subject"
                 variant="outlined"
                 onChange={(e) => {
                   setTeacherSubject(e.target.value);
@@ -530,9 +535,9 @@ function TeacherTabel(props) {
                             variant="outlined"
                             size="small"
                             color="secondary"
-                            disabled={disabled}
-                            id={index}
-                            onClick={()=>handelRechatDecline(student)}
+                            onClick={()=>handelRechatDecline( student.subjects.find(
+                              (subject) => subject.name === teacherSubject
+                            ))}
                           >
                             Decline
                           </Button>
@@ -548,28 +553,6 @@ function TeacherTabel(props) {
     </div>
   );
 }
-const mapDispatchToProps = (dispatch) => {
-  return {
-    updateStudents: (data) => {
-      dispatch({ type: "UPDATE_STUDENTS", payload: data });
-    },
-    updateClass: (data) => {
-      dispatch({ type: "UPDATE_CLASS", payload: data });
-    },
-    updateListedSubjects: (data) => {
-      dispatch({ type: "UPDATE_LISTED_SUBJECTS", payload: data });
-    },
-  };
-};
 
-const mapStateToProps = (state) => {
-  return {
-    students: state.students,
-    student: state.selectedStudent,
-    selectedClass: state.selectedClass,
-    selectedListedSubjects: state.listedSubjects,
-    rachatavg: state.rachatAVG,
-  };
-};
 
-export default connect(mapStateToProps, mapDispatchToProps)(TeacherTabel);
+export default (TeacherTabel);
