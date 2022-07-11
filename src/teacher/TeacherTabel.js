@@ -1,5 +1,5 @@
 import { withStyles, makeStyles, alpha } from "@material-ui/core/styles";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Button from "@material-ui/core/Button";
 import InputBase from "@material-ui/core/InputBase";
 import Table from "@material-ui/core/Table";
@@ -10,9 +10,7 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
 import axios from "axios";
-import { connect } from "react-redux";
 import FormControl from "@material-ui/core/FormControl";
-import Autocomplete from "@material-ui/lab/Autocomplete";
 import { TextField } from "@material-ui/core";
 import Grid from "@material-ui/core/Grid";
 import UiAppBar from "../component/UiAppBar";
@@ -117,40 +115,14 @@ const CustomInput = withStyles((theme) => ({
     },
   },
 }))(InputBase);
-const Promo = [
-  { classYear: "2013/2012" },
-  { classYear: "2014/2013" },
-  { classYear: "2015/2014" },
-  { classYear: "2016/2015" },
-  { classYear: "2017/2016" },
-  { classYear: "2018/2017" },
-  { classYear: "2019/2018" },
-  { classYear: "2020/2019" },
-  { classYear: "2021/2020" },
-  { classYear: "2022/2021" },
-  { classYear: "2023/2022" },
-];
-const Semasters = [
-  { Semastername: "L1-S1" },
-  { Semastername: "L1-S2" },
-  { Semastername: "L2-S1" },
-  { Semastername: "L2-S2" },
-  { Semastername: "L3-S1" },
-  { Semastername: "L3-S2" },
-  { Semastername: "M1-S1" },
-  { Semastername: "M1-S2" },
-  { Semastername: "M2-S1" },
-  { Semastername: "M2-S2" },
-];
 
-function TeacherTabel(props) {
+
+function TeacherTabel() {
   const classes = useStyles();
-  const [semester, setSemester] = useState("");
-  const [promo, setPromo] = useState("");
   const [underAvg, setUnderavg] = useState([]);
   const [teacherSubject, setTeacherSubject] = useState("");
   const [addedValue, setAddedValue] = useState(0);
-  const [disabled, setDisable] = useState(false);
+
 
   const changeTD = (e, index) => {
     let clone = index;
@@ -171,7 +143,10 @@ function TeacherTabel(props) {
     let sum = 0;
     let coefs = 0;
     subjects.map((subject) => {
-      if (subject.semester === semester && subject.year === promo) {
+      if (
+        subject.semester === sessionSemester &&
+        subject.year === sessionPromo
+      ) {
         let local =
           subject.TD * subject.coefTD +
           subject.TP * subject.coefTP +
@@ -205,10 +180,8 @@ function TeacherTabel(props) {
     ).toFixed(2));
   };
 
-  useEffect(() => {
-    console.log(props.rachatavg);
-  }, []);
-
+  const sessionPromo = sessionStorage.getItem("Promo");
+  const sessionSemester = sessionStorage.getItem("Year");
   const handelSearch = async () => {
     console.log("handelSearch clicked");
 
@@ -221,17 +194,13 @@ function TeacherTabel(props) {
       console.log(output);
       output.map((student) => {
         const isSelcted = student.classes.some(
-          (cls) => cls.year === promo && cls.semastre === semester
+          (cls) => cls.year === sessionPromo && cls.semastre === sessionSemester
         );
         if (isSelcted) {
           const avg = calculateAverage(student.subjects);
           const subjectavg = selectSubjectUnderAverage(student.subjects);
           student.avg = avg;
-          if (
-            avg < 10 &&
-            subjectavg < 10 &&
-            avg >= parseFloat(rachat)
-          ) {
+          if (avg < 10 && subjectavg < 10 && avg >= parseFloat(rachat)) {
             cloneUnderAvg.push(student);
           }
           setUnderavg(cloneUnderAvg);
@@ -271,17 +240,16 @@ function TeacherTabel(props) {
       });
   };
 
-  const rachat = sessionStorage.getItem("Rachat")
+  const rachat = sessionStorage.getItem("Rachat");
 
   const proposeRachat = (subject) => {
     let rachat = 0;
-      rachat = parseFloat(
-        10 - (subject.TD * subject.coefTD + subject.TP * subject.coefTP) / 0.6
-      ).toFixed(2);
+    rachat = parseFloat(
+      10 - (subject.TD * subject.coefTD + subject.TP * subject.coefTP) / 0.6
+    ).toFixed(2);
     return rachat;
   };
-  const handelRechatDecline=(subject)=>{
-
+  const handelRechatDecline = (subject) => {
     let clone = [...underAvg];
     clone.map((student) => {
       if (student._id == subject.student_id) {
@@ -293,8 +261,8 @@ function TeacherTabel(props) {
     setUnderavg(clone);
     calculateAverage(
       underAvg.find((student) => student._id == subject.student_id).subjects
-    );}
-
+    );
+  };
 
   return (
     <div>
@@ -302,53 +270,7 @@ function TeacherTabel(props) {
 
       <main className={classes.layout}>
         <Paper className={classes.paper}>
-          <Grid
-            container
-            direction="row"
-            rowSpacing={1}
-            justifyContent="space-around"
-          >
-            <Grid item xs={3}>
-              <Autocomplete
-                id="combo-box-demo"
-                options={Promo}
-                getOptionLabel={(option) => option.classYear}
-                style={{ width: 200 }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Current promo "
-                    variant="outlined"
-                    name="Promo"
-                    value={promo}
-                    onSelect={(e) => {
-                      setPromo(e.target.value);
-                    }}
-                  />
-                )}
-              />
-            </Grid>
-
-            <Grid item xs={3}>
-              <Autocomplete
-                id="combo-box-demo"
-                options={Semasters}
-                getOptionLabel={(option) => option.Semastername}
-                style={{ width: 200 }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Select Semastre"
-                    variant="outlined"
-                    name="Semaster"
-                    value={semester}
-                    onSelect={(e) => {
-                      setSemester(e.target.value);
-                    }}
-                  />
-                )}
-              />
-            </Grid>
+          <Grid container direction="row" rowSpacing={1}>
             <Grid item xs={3}>
               <TextField
                 id="outlined-basic"
@@ -535,9 +457,13 @@ function TeacherTabel(props) {
                             variant="outlined"
                             size="small"
                             color="secondary"
-                            onClick={()=>handelRechatDecline( student.subjects.find(
-                              (subject) => subject.name === teacherSubject
-                            ))}
+                            onClick={() =>
+                              handelRechatDecline(
+                                student.subjects.find(
+                                  (subject) => subject.name === teacherSubject
+                                )
+                              )
+                            }
                           >
                             Decline
                           </Button>
@@ -554,5 +480,4 @@ function TeacherTabel(props) {
   );
 }
 
-
-export default (TeacherTabel);
+export default TeacherTabel;
