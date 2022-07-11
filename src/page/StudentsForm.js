@@ -12,6 +12,7 @@ import IconButton from "@material-ui/core/IconButton";
 import CloseIcon from "@material-ui/icons/Close";
 import { withStyles } from "@material-ui/core/styles";
 import { connect } from "react-redux";
+import { InputBase } from "@material-ui/core";
 const useStyles = makeStyles((theme) => ({
   root: {
     paddingBottom: "16px",
@@ -105,6 +106,10 @@ const StudentsForm = (props) => {
       setData(getdata);
     });
   }, []);
+  const handleAddToSession = () => {
+    sessionStorage.setItem("Promo", value.Promo);
+    sessionStorage.setItem("Year", value.Semaster);
+  };
 
   const handleSubmite = (e) => {
     console.log(value);
@@ -119,11 +124,11 @@ const StudentsForm = (props) => {
         { headers: { "Content-Type": "application/json" } }
       )
       .then((res) => {
-       if(res.data.isCreated){
-         let clone = [...props.students]
-         clone.push(res.data.student)
-         props.updateStudents(clone)
-       }
+        if (res.data.isCreated) {
+          let clone = [...props.students];
+          clone.push(res.data.student);
+          props.updateStudents(clone);
+        }
       })
       .catch((error) => {
         console.log(error.data);
@@ -156,9 +161,45 @@ const StudentsForm = (props) => {
 
   return (
     <div>
-      <Button variant="outlined" color="primary" onClick={handleClickOpen}>
-        Insert Students
-      </Button>
+      <Grid container direction="row" justifyContent="space-between">
+        <Button variant="outlined" color="primary" onClick={handleClickOpen}>
+          Insert Students
+        </Button>
+        <Autocomplete
+          id="combo-box-demo"
+          options={Promo}
+          getOptionLabel={(option) => option.classYear}
+          style={{ width: 200 }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Current promo "
+              variant="outlined"
+              name="Promo"
+              onSelect={handleAddSemaster}
+            />
+          )}
+        />
+        <Autocomplete
+          id="combo-box-demo"
+          options={Semasters}
+          getOptionLabel={(option) => option.Semastername}
+          style={{ width: 200 }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Select Semastre"
+              variant="outlined"
+              name="Semaster"
+              onSelect={handleAddSemaster}
+            />
+          )}
+        />
+
+        <Button variant="outlined" color="primary" onClick={handleAddToSession}>
+          Insert the Current year
+        </Button>
+      </Grid>
       <Dialog
         onClose={handleClose}
         aria-labelledby="customized-dialog-title"
@@ -235,7 +276,6 @@ const StudentsForm = (props) => {
               />
             </Grid>
           </Grid>
-
         </DialogContent>
         <DialogActions>
           <Button autoFocus onClick={handleSubmite} color="primary">
@@ -250,7 +290,7 @@ const mapDispatchToProps = (dispatch) => {
   return {
     updateStudents: (data) => {
       dispatch({ type: "UPDATE_STUDENTS", payload: data });
-    }
+    },
   };
 };
 
@@ -262,7 +302,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default  connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(StudentsForm);
+export default connect(mapStateToProps, mapDispatchToProps)(StudentsForm);
