@@ -197,7 +197,7 @@ const StudentsForm = (props) => {
         />
 
         <Button variant="outlined" color="primary" onClick={handleAddToSession}>
-          Insert the Current year
+          Insert the Current year for teachers 
         </Button>
       </Grid>
       <Dialog

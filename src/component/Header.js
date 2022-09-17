@@ -7,6 +7,7 @@ import {
   makeStyles,
 } from "@material-ui/core";
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import axios from "axios";
 
 import Button from "@material-ui/core/Button";
 import { useNavigate } from "react-router-dom";
@@ -35,11 +36,26 @@ function Header(props) {
   const navigate = useNavigate();
   const [state,setState] = useState()
   sessionStorage.setItem('Rachat', state);
+ const promo =  sessionStorage.getItem("Promo")
+ const year =  sessionStorage.getItem("Year")
   
   const handelSendRachatAVG=()=>{
     let clone = props.rachatavg;
     clone = state
     props.updateRachatAVG(clone)
+    axios
+    .post(
+      "http://localhost:4000/rachat",
+      {
+        rachat: state,
+        promo: promo,
+        year: year,
+       
+      },
+      { headers: { "Content-Type": "application/json" } }
+      )
+      .then((res) => {console.log(res)})
+    
   }
 
   
